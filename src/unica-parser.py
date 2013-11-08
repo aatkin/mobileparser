@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup as BS
 import urllib2 as url
+import re
 
 page = url.urlopen("http://www.unica.fi/fi/ravintolat/mikro/").read()
 
@@ -14,7 +15,8 @@ for day in week_days:
 	day_name = day.h4.get_text()
 	day_number = day.h4.get("data-dayofweek")
 	day_lunches = map(lambda x: x.get_text().encode('utf-8', 'ignore'), day.table.select(".lunch")) 
-        day_prices = map(lambda y: y.get_text().encode('ascii', 'ignore').strip(), day.table.select("[class~=price]"))
+        day_prices = map(lambda y: re.findall(r'\d\,\d\d', y.get_text().encode('ascii','ignore')), day.table.select("[class~=price]"))
+	
 	print day_number, day_name
         print dict(zip(day_lunches, day_prices))   
 
