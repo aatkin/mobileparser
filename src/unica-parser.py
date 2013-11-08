@@ -18,5 +18,6 @@ for day in week_days:
         day_prices = map(lambda y: re.findall(r'\d\,\d\d', y.get_text().encode('ascii','ignore')), day.table.select("[class~=price]"))
 	
 	print day_number, day_name
-        print dict(zip(day_lunches, day_prices))   
+        print dict(zip(day_lunches, day_prices))
+	print ' / '.join(day_prices[0])
 
