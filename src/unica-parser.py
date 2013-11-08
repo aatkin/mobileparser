@@ -6,8 +6,9 @@ page = url.urlopen("http://www.unica.fi/fi/ravintolat/mikro/", data="UTF-8").rea
 soup = BS(page)
 
 menu_list = soup.select(".menu-list")[0]
-week_day = menu_list.select("h4[data-dayofweek='0'] + table")
-foods = week_day
-print foods
+week_days = menu_list.select(".accord")
+for day in week_days:
+	print day.h4.get_text()
+	print day.table.get_text()
 print soup.select("#side-navi")[0].find_all("li")[0].get_text()
 
