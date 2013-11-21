@@ -4,7 +4,7 @@ import re
 import json
 import os
 import sys
-import datetime
+from datetime import datetime
 import logging
 import restaurant_urls as rest_urls
 
@@ -37,7 +37,8 @@ def parse(expected_week_number):
         week_number = int(
             re.findall(r'\d\d', soup.select("div.pad > h3.head2")[0].get_text().encode('ascii', 'ignore'))[0])
         if(week_number != expected_week_number):
-            LOG.error(' Expected week number was ' + str(expected_week_number) + ' but actual was ' + str(week_number))
+            LOG.error(' Expected week number was ' + str(
+                expected_week_number) + ' but actual was ' + str(week_number))
             return
         # contains the menu
         menu_list = soup.select(".menu-list")[0]
@@ -49,7 +50,6 @@ def parse(expected_week_number):
         # every day is inside accord
         week_days = menu_list.select(".accord")
         for day in week_days:
-            day_name = day.h4.get_text()
             day_number = int(day.h4.get("data-dayofweek"))
             day_lunches = map(lambda x: x.get_text().encode(
                 'utf-8', 'ignore'), day.table.select(".lunch"))
@@ -62,24 +62,24 @@ def parse(expected_week_number):
         restaurants.append(restaurant)
 
         write_output_file(
-            get_json(restaurant), restaurant_name=restaurant['name'], file_type="json")
+            get_json(restaurant), week_number, restaurant_name=restaurant['name'], file_type="json")
 
-        # daily foods in one file for now
-        week_day_all = []
-        for rest in restaurants:
-            rest_name = rest['name']
-            for day in rest['days']:
-                day_number = day['day']
-                day_foods = day['foods']
+    # daily foods in one file for now
+    week_day_all = []
+    for rest in restaurants:
+        rest_name = rest['name']
+        for day in rest['days']:
+            day_number = day['day']
+            day_foods = day['foods']
 
-                if day_number not in range(len(week_day_all)):
-                    week_day_all.append({'day': day_number, 'restaurants': []})
+            if day_number not in range(len(week_day_all)):
+                week_day_all.append({'day': day_number, 'restaurants': []})
 
-                week_day_all[day_number]['restaurants'].append(
-                    {'restaurant': rest_name, 'foods': day_foods})
+            week_day_all[day_number]['restaurants'].append(
+                {'restaurant': rest_name, 'foods': day_foods})
 
-        write_output_file(
-            get_json(week_day_all), restaurant_name="unica", file_type="json")
+    write_output_file(
+        get_json(week_day_all), week_number, restaurant_name="unica", file_type="json")
 
 
 def get_json(data):
@@ -93,11 +93,11 @@ def get_json(data):
     data: Object
     data in json format
         """
-    print "creating json format..."
-    return json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+    LOG.info(" Creating json format...")
+    return json.dumps(data)
 
 
-def write_output_file(data, restaurant_name="", file_type="json"):
+def write_output_file(data, week_number, restaurant_name="", file_type="json"):
     """
     Writes data to file that is placed in output directory.
     Parameters
@@ -106,6 +106,7 @@ def write_output_file(data, restaurant_name="", file_type="json"):
     restaurant_name: str
     file_type: str
     """
+    year_and_week = str(datetime.now().year) + "_w" + str(week_number)
     restaurant_name = format_name(restaurant_name)
     directory = '../output/%s' % restaurant_name
     # make the directory above if it doesn't exist
@@ -113,8 +114,9 @@ def write_output_file(data, restaurant_name="", file_type="json"):
         os.makedirs(directory)
 
     filename = "%(dir)s/%(filename)s.%(filetype)s" % {
-        'dir': directory, 'filename': restaurant_name, 'filetype': file_type}
-    print "writing to file %s..." % filename
+        'dir': directory, 'filename': year_and_week + "_" + restaurant_name, 'filetype': file_type}
+    
+    LOG.info(" Writing to a file: " + filename)
     # Write with w+ writes
     open(filename, "w+").write(data)
 
