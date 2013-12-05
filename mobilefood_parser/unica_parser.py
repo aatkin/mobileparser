@@ -20,10 +20,10 @@ def load_page(link):
         page = url.urlopen(link).read()
 
     except url.URLError, e:
-        LOG.exception("Connection failed to UNICA")
-        return
+        LOG.exception("Unable to connect to a given link")
+        return -1
 
-    return BS(page, from_encoding='utf-8')
+    return page
 
 
 def parse(expected_week_number):
@@ -32,14 +32,14 @@ def parse(expected_week_number):
     restaurants = []
 
     for link in rest_urls.UNICA_URLS:
-        soup = load_page(link)
+        soup = BS(load_page(link), from_encoding='utf-8')
 
         week_number = int(
             re.findall(r'\d\d', soup.select("div.pad > h3.head2")[0].get_text().encode('ascii', 'ignore'))[0])
         if(week_number != expected_week_number):
             LOG.error(' Expected week number was ' + str(
                 expected_week_number) + ' but actual was ' + str(week_number))
-            return
+            return -1
         # contains the menu
         menu_list = soup.select(".menu-list")[0]
 
@@ -115,7 +115,7 @@ def write_output_file(data, week_number, restaurant_name="", file_type="json"):
 
     filename = "%(dir)s/%(filename)s.%(filetype)s" % {
         'dir': directory, 'filename': year_and_week + "_" + restaurant_name, 'filetype': file_type}
-    
+
     LOG.info(" Writing to a file: " + filename)
     # Write with w+ writes
     open(filename, "w+").write(data)
@@ -136,4 +136,4 @@ def format_name(name):
 
 if __name__ == '__main__':
     # parse(datetime.datetime.now().isocalendar()[1])
-    parse(int(sys.argv[1]))
+    sys.exit(parse(int(sys.argv[1])))
