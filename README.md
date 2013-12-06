@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Wiltzu/mobilefood-parser.png)](https://travis-ci.org/Wiltzu/mobilefood-parser)
 mobilefood-parser
 =================
 
