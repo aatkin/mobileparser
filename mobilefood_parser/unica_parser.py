@@ -26,6 +26,17 @@ def load_page(link):
     return page
 
 
+def assureTheWeekNumber(page, expected_week_number):
+    soup = BS(page, from_encoding='utf-8')
+
+    week_number = int(
+        re.findall(r'\d\d', soup.select("div.pad > h3.head2")[0].get_text().encode('ascii', 'ignore'))[0])
+    if(week_number != expected_week_number):
+        LOG.error(' Expected week number was ' + str(
+            expected_week_number) + ' but actual was ' + str(week_number))
+        return -1
+
+
 def parse(expected_week_number):
     """
     """
