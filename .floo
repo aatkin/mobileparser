@@ -1,0 +1,10 @@
+{
+    "url": "https://floobits.com/Floobits/website/",
+    "hooks": {
+        "*.js": "cd /path/to/django && ./manage.py compress --force",
+        "*.py": "touch /path/to/django/django.wsgi",
+        "*.less": "/web/regenerate_less.sh",
+        "*": "echo #FLOO_HOOK_FILE"
+    }
+}
+
