@@ -70,8 +70,6 @@ class UnicaParser:
             foodsByADay.append(
                 {"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
 
-        write_output_file(
-            get_json(restaurants_foods), self.week_number, restaurant_name=restaurants_foods['restaurant_name'], file_type="json")
         return restaurants_foods
 
 
@@ -79,6 +77,7 @@ def combine_restaurants_foods(restaurants):
     """
     Returns: combined foods from list of restaurants
     """
+    LOG.info(" Combining restaurants...")
     combined_foods = []
     for rest in restaurants:
         rest_name = rest['restaurant_name']
@@ -87,7 +86,8 @@ def combine_restaurants_foods(restaurants):
             days_lunches = day['lunches_to_prices']
 
             if day_number not in range(len(combined_foods)):
-                combined_foods.append({'day': day_number, 'foods_by_restaurant': []})
+                combined_foods.append(
+                    {'day': day_number, 'foods_by_restaurant': []})
 
             combined_foods[day_number]['foods_by_restaurant'].append(
                 {'restaurant_name': rest_name, 'foods': days_lunches})
@@ -129,7 +129,7 @@ def write_output_file(data, week_number, restaurant_name="", file_type="json"):
         'dir': directory, 'filename': year_and_week + "_" + restaurant_name, 'filetype': file_type}
 
     LOG.info(" Writing to a file: " + filename)
-    # Write with w+ writes
+    # Write with w+ rights
     open(filename, "w+").write(data)
 
 
@@ -148,7 +148,16 @@ def format_name(name):
 
 if __name__ == '__main__':
     # parse(datetime.datetime.now().isocalendar()[1])
-    parser = UnicaParser(int(sys.argv[1]))
+    requested_week_number = int(sys.argv[1])
+    parser = UnicaParser(requested_week_number)
+    restaurants = []
     for link in rest_urls.UNICA_URLS:
         # sys.exit(parser.parse(load_page(link)))
-        parser.parse(load_page(link))
+        output = parser.parse(load_page(link))
+        if output == -1:
+            sys.exit(-1)
+        else:
+            restaurants.append(output)
+
+    write_output_file(
+        get_json(combine_restaurants_foods(restaurants)), requested_week_number, restaurant_name="Unica", file_type="json")
