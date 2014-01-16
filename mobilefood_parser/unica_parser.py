@@ -43,7 +43,7 @@ class UnicaParser:
 
     def parse(self, page):
         """
-        Returns: list of foods by a day
+        Returns: restaurant with name and foods and their prices by a day
         """
         restaurants = []
 
@@ -53,10 +53,10 @@ class UnicaParser:
             return -1
         # contains the menu
         menu_list = soup.select(".menu-list")[0]
-        
+
         foodsByADay = []
-        restaurants_foods = {'restaurant_name' : soup.select(".head")[
-            0].get_text().strip(), 'lunches_by_day' : foodsByADay}
+        restaurants_foods = {'restaurant_name': soup.select(".head")[
+            0].get_text().strip(), 'lunches_by_day': foodsByADay}
 
         # every day is inside accord
         week_days = menu_list.select(".accord")
@@ -67,29 +67,31 @@ class UnicaParser:
             day_prices = map(lambda y: re.findall(
                 r'\d\,\d\d', y.get_text().encode('ascii', 'ignore')), day.table.select("[class~=price]"))
             lunches_to_prices = dict(zip(day_lunches, day_prices))
-            foodsByADay.append({"day_of_the_week" : day_number, "food": lunches_to_prices})
+            foodsByADay.append(
+                {"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
 
         write_output_file(
             get_json(restaurants_foods), self.week_number, restaurant_name=restaurants_foods['restaurant_name'], file_type="json")
+        return restaurants_foods
 
-        """
-        # daily foods in one file for now
-        week_day_all = []
-        for rest in restaurants:
-            rest_name = rest['name']
-            for day in rest['days']:
-                day_number = day['day']
-                day_foods = day['foods']
 
-                if day_number not in range(len(week_day_all)):
-                    week_day_all.append({'day': day_number, 'restaurants': []})
+def combine_restaurants_foods(restaurants):
+    """
+    Returns: combined foods from list of restaurants
+    """
+    combined_foods = []
+    for rest in restaurants:
+        rest_name = rest['restaurant_name']
+        for day in rest['lunches_by_day']:
+            day_number = day['day_of_the_week']
+            days_lunches = day['lunches_to_prices']
 
-                week_day_all[day_number]['restaurants'].append(
-                    {'restaurant': rest_name, 'foods': day_foods})
+            if day_number not in range(len(combined_foods)):
+                combined_foods.append({'day': day_number, 'foods_by_restaurant': []})
 
-        write_output_file(
-            get_json(week_day_all), week_number, restaurant_name="unica", file_type="json")
-        """
+            combined_foods[day_number]['foods_by_restaurant'].append(
+                {'restaurant_name': rest_name, 'foods': days_lunches})
+    return combined_foods
 
 
 def get_json(data):
@@ -148,5 +150,5 @@ if __name__ == '__main__':
     # parse(datetime.datetime.now().isocalendar()[1])
     parser = UnicaParser(int(sys.argv[1]))
     for link in rest_urls.UNICA_URLS:
-        #sys.exit(parser.parse(load_page(link)))
+        # sys.exit(parser.parse(load_page(link)))
         parser.parse(load_page(link))
