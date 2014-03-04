@@ -62,11 +62,15 @@ class UnicaParser:
         week_days = menu_list.select(".accord")
         for day in week_days:
             day_number = int(day.h4.get("data-dayofweek"))
+            
             day_lunches = map(lambda x: x.get_text().encode(
                 'utf-8', 'ignore'), day.table.select(".lunch"))
+            
             day_prices = map(lambda y: re.findall(
                 r'\d\,\d\d', y.get_text().encode('ascii', 'ignore')), day.table.select("[class~=price]"))
-            lunches_to_prices = dict(zip(day_lunches, day_prices))
+            
+            lunches_to_prices = [{'name' : food, 'prices' : prices} for food, prices in zip(day_lunches, day_prices)]
+            
             foodsByADay.append(
                 {"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
 
