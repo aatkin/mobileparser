@@ -147,17 +147,27 @@ def format_name(name):
     return name.strip().replace(" ", "_")
 
 if __name__ == '__main__':
-    # parse(datetime.datetime.now().isocalendar()[1])
-    requested_week_number = int(sys.argv[1])
-    parser = UnicaParser(requested_week_number)
+    if len (sys.argv) > 1:
+        week_number = int(sys.argv[1])
+    else:
+        week_number = datetime.now().isocalendar()[1]
+
+    if week_number >= 1 and week_number <= 52:
+        LOG.info(" Parsing Unica-foods from week " + str(week_number))
+        parser = UnicaParser(week_number)
+    else:
+        sys.exit(1)
+
     restaurants = []
+
     for link in rest_urls.UNICA_URLS:
-        # sys.exit(parser.parse(load_page(link)))
-        output = parser.parse(load_page(link))
+        page = load_page(link)
+        output = parser.parse(page)
+
         if output == -1:
-            sys.exit(-1)
+            sys.exit(1)
         else:
             restaurants.append(output)
 
     write_output_file(
-        get_json(combine_restaurants_foods(restaurants)), requested_week_number, restaurant_name="Unica", file_type="json")
+        get_json(combine_restaurants_foods(restaurants)), week_number, restaurant_name="unica", file_type="json")
