@@ -62,14 +62,12 @@ class UnicaParser:
         week_days = menu_list.select(".accord")
         for day in week_days:
             day_number = int(day.h4.get("data-dayofweek"))
-            
-            day_lunches = map(lambda x: x.get_text().encode(
-                'utf-8', 'ignore'), day.table.select(".lunch"))
 
-            day_diets = [x.get_text().encode('utf-8', 'ignore').strip() for x in day.table.select(".limitations")]
-            
-            day_prices = map(lambda y: re.findall(
-                r'\d\,\d\d', y.get_text().encode('ascii', 'ignore')), day.table.select("[class~=price]"))
+            day_lunches = [removeEOLAndEncode(x.get_text()) for x in day.table.select(".lunch")]
+
+            day_diets = [removeEOLAndEncode(x.get_text()) if x.span else "" for x in day.table.select(".limitations")]
+
+            day_prices = [re.findall(r'\d\,\d\d', removeEOLAndEncode(x.get_text())) for x in day.table.select("[class~=price]")]
             
             lunches_to_prices = [{'name' : food, 'diets' : diets,'prices' : prices} for food, diets, prices in zip(day_lunches, day_diets, day_prices)]
             
@@ -77,6 +75,13 @@ class UnicaParser:
                 {"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
 
         return restaurants_foods
+
+def removeEOLAndEncode(text):
+    """
+    Encodes text to UTF-8 and removes End-of-Line 
+    characters in the middle and leading and trailing spaces. 
+    """
+    return text.encode('utf-8', 'ignore').strip().replace('\n', '').replace('\t','').replace('\r', '')
 
 
 def combine_restaurants_foods(restaurants):
