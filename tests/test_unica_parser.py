@@ -1,4 +1,5 @@
 import unittest
+import os
 from datetime import datetime
 from mobilefood_parser.unica_parser import *
 
@@ -6,8 +7,8 @@ def build_relative_path_to(resource):
 	return os.path.join(os.path.dirname(__file__), resource)
 
 CURRENT_WEEK_NUMBER = 49
-MIKRO_FILE_PATH = build_relative_path_to('resources\\Mikro_Unica.htm')
-ASSARI_FILE_PATH = build_relative_path_to('resources\\Assarin_ullakko_Unica.htm')
+MIKRO_FILE_PATH = build_relative_path_to(os.path.join('resources', 'Mikro_Unica.htm'))
+ASSARI_FILE_PATH = build_relative_path_to(os.path.join('resources', 'Assarin_ullakko_Unica.htm'))
 
 
 class UnicaParserTests(unittest.TestCase):
@@ -28,6 +29,10 @@ class UnicaParserTests(unittest.TestCase):
 		combined_foods = combine_restaurants_foods([mikro_foods,assari_foods])
 		self.assertEquals('Mikro', combined_foods[0]['foods_by_restaurant'][0]['restaurant_name'])
 
+        def ThatParsedRestaurantFoodsContainCorrectInfo(self):
+                parser = UnicaParser(week_number=CURRENT_WEEK_NUMBER)
+		mikro_foods = parser.parse(open(MIKRO_FILE_PATH))
+                self.assertTrue(mikro_foods[0]['lunches_by_day'][0]['lunches_to_prices'][0]['diets'])
 
 
 

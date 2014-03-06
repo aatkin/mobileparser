@@ -65,11 +65,13 @@ class UnicaParser:
             
             day_lunches = map(lambda x: x.get_text().encode(
                 'utf-8', 'ignore'), day.table.select(".lunch"))
+
+            day_diets = [x.get_text().encode('utf-8', 'ignore').strip() for x in day.table.select(".limitations")]
             
             day_prices = map(lambda y: re.findall(
                 r'\d\,\d\d', y.get_text().encode('ascii', 'ignore')), day.table.select("[class~=price]"))
             
-            lunches_to_prices = [{'name' : food, 'prices' : prices} for food, prices in zip(day_lunches, day_prices)]
+            lunches_to_prices = [{'name' : food, 'diets' : diets,'prices' : prices} for food, diets, prices in zip(day_lunches, day_diets, day_prices)]
             
             foodsByADay.append(
                 {"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
