@@ -22,7 +22,7 @@ def load_page(link):
         page = url.urlopen(link).read()
 
     except url.URLError, e:
-        LOG.exception("Unable to connect to a given link")
+        LOG.exception("Unable to connect to a given link: \n %s", str(e))
         return -1
 
     return page
@@ -47,36 +47,65 @@ class UnicaParser:
         """
         Returns: restaurant with name and foods and their prices by a day
         """
-        restaurants = []
 
-        soup = BS(page, from_encoding='utf-8')
+        try:
+            soup = BS(page, from_encoding='utf-8')
+        
+            if self.assureTheWeekNumberIsSameAsInThePage(soup) == -1:
+                return -1
+            # contains the menu
+            menu_list = soup.select(".menu-list")[0]
 
-        if self.assureTheWeekNumberIsSameAsInThePage(soup) == -1:
+            restaurant_name = removeEOLAndEncode(soup.select(".head")[0].get_text())
+            foodsByADay = []
+            restaurants_foods = {'restaurant_name': restaurant_name, 'lunches_by_day': foodsByADay}
+
+            # every day is inside accord
+            week_days = menu_list.select(".accord")
+
+            if len(week_days) == 0:
+                LOG.error("Week days in accordion can't be found. Check page whether its HTML has changed!")
+
+            for day in week_days:
+                day_number = int(day.h4.get("data-dayofweek"))
+
+
+                lunch_elements = day.table.select(".lunch")
+                diet_elements = day.table.select(".limitations")
+                price_elements = day.table.select(".price")
+
+                if len(lunch_elements) == 0 or not len(lunch_elements) == len(diet_elements) == len(price_elements):
+                    error_message = " Problem detected while parsing foods:"
+                    if len(lunch_elements) == 0:
+                        error_message = error_message + " Food names could not be parsed."
+
+                    if len(diet_elements) == 0:
+                        error_message = error_message + " Diets could not be parsed."
+               
+                    if len(price_elements) == 0:
+                        error_message = error_message + " Prices could not be parsed."
+                    
+                    LOG.error(error_message)
+                    return -1
+
+
+                day_lunches = [removeEOLAndEncode(x.get_text() if x else "") for x in lunch_elements]
+
+                day_diets = [removeEOLAndEncode(x.get_text()) if x.span else "" for x in diet_elements]
+
+                day_prices = [re.findall(r'\d\,\d\d', removeEOLAndEncode(x.get_text())) for x in price_elements]
+
+            
+                lunches_to_prices = [{'name' : food, 'diets' : diets,'prices' : prices} for food, diets, prices in zip(day_lunches, day_diets, day_prices)]
+            
+                foodsByADay.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
+
+            return restaurants_foods
+
+        except Exception, e:
+            LOG.exception("Error detected while parsing...", e)
             return -1
-        # contains the menu
-        menu_list = soup.select(".menu-list")[0]
-
-        foodsByADay = []
-        restaurants_foods = {'restaurant_name': soup.select(".head")[
-            0].get_text().strip(), 'lunches_by_day': foodsByADay}
-
-        # every day is inside accord
-        week_days = menu_list.select(".accord")
-        for day in week_days:
-            day_number = int(day.h4.get("data-dayofweek"))
-
-            day_lunches = [removeEOLAndEncode(x.get_text()) for x in day.table.select(".lunch")]
-
-            day_diets = [removeEOLAndEncode(x.get_text()) if x.span else "" for x in day.table.select(".limitations")]
-
-            day_prices = [re.findall(r'\d\,\d\d', removeEOLAndEncode(x.get_text())) for x in day.table.select("[class~=price]")]
-            
-            lunches_to_prices = [{'name' : food, 'diets' : diets,'prices' : prices} for food, diets, prices in zip(day_lunches, day_diets, day_prices)]
-            
-            foodsByADay.append(
-                {"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
-
-        return restaurants_foods
+        
 
 def removeEOLAndEncode(text):
     """
@@ -182,5 +211,8 @@ if __name__ == '__main__':
         else:
             restaurants.append(output)
 
-    write_output_file(
-        get_json(combine_restaurants_foods(restaurants)), week_number, restaurant_name="unica", file_type="json")
+    try:
+        write_output_file(
+            get_json(combine_restaurants_foods(restaurants)), week_number, restaurant_name="unica", file_type="json")
+    except Exception, e:
+        LOG.exception("Exception occured while combining foods and writing them to file: \n %s", str(e))
