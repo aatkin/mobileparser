@@ -1,3 +1,5 @@
+#!/usr/bin/python 
+
 from bs4 import BeautifulSoup as BS
 import urllib2 as url
 import re
