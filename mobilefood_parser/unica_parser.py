@@ -103,7 +103,7 @@ class UnicaParser:
             return restaurants_foods
 
         except Exception, e:
-            LOG.exception("Error detected while parsing...", e)
+            LOG.exception("Exception occured while parsing... \n %s", str(e))
             return -1
         
 
