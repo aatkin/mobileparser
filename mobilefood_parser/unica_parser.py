@@ -212,6 +212,7 @@ if __name__ == '__main__':
         output = parser.parse(page)
 
         if output == -1:
+            LOG.error("Page that resulted in an error: \n %s", page)
             sys.exit(1)
         else:
             restaurants.append(output)
