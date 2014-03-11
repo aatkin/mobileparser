@@ -53,7 +53,8 @@ class UnicaParser:
         
             if self.assureTheWeekNumberIsSameAsInThePage(soup) == -1:
                 return -1
-            # contains the menu
+            
+            # contains the lunch menu
             menu_list = soup.select(".menu-list")[0]
 
             restaurant_name = removeEOLAndEncode(soup.select(".head")[0].get_text())
@@ -65,10 +66,13 @@ class UnicaParser:
 
             if len(week_days) == 0:
                 LOG.error("Week days in accordion can't be found. Check page whether its HTML has changed!")
+                return -1
 
             for day in week_days:
-                day_number = int(day.h4.get("data-dayofweek"))
-
+                day_element = day.h4
+                LOG.info(" Parsing week day: %s", day.h4.get_text())
+                
+                day_number = int(day_element.get("data-dayofweek"))
 
                 lunch_elements = day.table.select(".lunch")
                 diet_elements = day.table.select(".limitations")
@@ -86,6 +90,7 @@ class UnicaParser:
                         error_message = error_message + " Prices could not be parsed."
                     
                     LOG.error(error_message)
+                    LOG.error("Day that could not be parsed:\n %s", day)
                     return -1
 
 
@@ -117,7 +122,7 @@ def removeEOLAndEncode(text):
 
 def combine_restaurants_foods(restaurants):
     """
-    Returns: combined foods from list of restaurants
+    Returns: combined foods from list of restaurants to foods by day
     """
     LOG.info(" Combining restaurants...")
     combined_foods = []
