@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#!/usr/bin/python
 
 from bs4 import BeautifulSoup as BS
 import urllib2 as url
@@ -12,7 +12,7 @@ import restaurant_urls as rest_urls
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger(' unica-parser ')
-
+outputDir = "/home/brigesh/koodit/git/mobilefood-parser/output"
 
 def load_page(link):
     page = None
@@ -167,7 +167,7 @@ def write_output_file(data, week_number, restaurant_name="", file_type="json"):
     """
     year_and_week = str(datetime.now().year) + "_w" + str(week_number)
     restaurant_name = format_name(restaurant_name)
-    directory = '../output/%s' % restaurant_name
+    directory = outputDir + '/%s' % restaurant_name
     # make the directory above if it doesn't exist
     if not os.path.exists(directory):
         os.makedirs(directory)
