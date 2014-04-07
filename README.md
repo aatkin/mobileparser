@@ -1,6 +1,7 @@
 mobilefood-parser [![Build Status](https://travis-ci.org/Wiltzu/mobilefood-parser.png)](https://travis-ci.org/Wiltzu/mobilefood-parser)
 =================
 
-Parser for Mobile Food project
+HTML parser for Mobilefood exercise project
+===========================================
 
-Creates .json files of restaurand foods to "./output/" directory.
+Creates JSON-output from certain restaurant foods.
