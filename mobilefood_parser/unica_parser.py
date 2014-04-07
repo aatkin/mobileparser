@@ -45,11 +45,10 @@ class UnicaParser:
 
     def parse(self, page):
         """
-        Returns: restaurants name and its foods and their prices for each day
+        Returns: restaurant's name and it's foods and their prices for each day
         """
         try:
-            soup = bs(page, from_encoding='utf-8')
-        
+            soup = bs(page, from_encoding='utf-8')      
             if self.assure_same_weeknumber(soup) == -1:
                 return -1
             
@@ -58,7 +57,6 @@ class UnicaParser:
 
             restaurant_name = encode_remove_eol(soup.select(".head")[0].get_text())
             daily_foods = []
-            restaurants_foods = {'restaurant_name': restaurant_name, 'lunches_by_day': daily_foods}
 
             # every day is inside accord-div
             week_days = menu_list.select(".accord")
@@ -89,18 +87,14 @@ class UnicaParser:
                     LOG.error("Could not parse weekday \n %s", day)
                     return -1
 
-
                 day_lunches = [encode_remove_eol(x.get_text() if x else "") for x in lunch_elements]
-
                 day_diets = [encode_remove_eol(x.get_text()) if x.span else "" for x in diet_elements]
-
                 day_prices = [re.findall(r'\d\,\d\d', encode_remove_eol(x.get_text())) for x in price_elements]
-
             
-                lunches_to_prices = [{'name' : food, 'diets' : diets,'prices' : prices} for food, diets, prices in zip(day_lunches, day_diets, day_prices)]
-            
+                lunches_to_prices = [{'name' : food, 'diets' : diets,'prices' : prices} for food, diets, prices in zip(day_lunches, day_diets, day_prices)]          
                 daily_foods.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
 
+            restaurants_foods = {'restaurant_name': restaurant_name, 'lunches_by_day': daily_foods}
             return restaurants_foods
 
         except Exception, e:
@@ -122,9 +116,9 @@ def combine_restaurants_foods(restaurants):
     """
     LOG.info(" Combining restaurants...")
     combined_foods = []
-    for rest in restaurants:
-        rest_name = rest['restaurant_name']
-        for day in rest['lunches_by_day']:
+    for restaurant in restaurants:
+        restaurant_name = restaurant['restaurant_name']
+        for day in restaurant['lunches_by_day']:
             day_number = day['day_of_the_week']
             days_lunches = day['lunches_to_prices']
 
@@ -133,7 +127,7 @@ def combine_restaurants_foods(restaurants):
                     {'day': day_number, 'foods_by_restaurant': []})
 
             combined_foods[day_number]['foods_by_restaurant'].append(
-                {'restaurant_name': rest_name, 'foods': days_lunches})
+                {'restaurant_name': restaurant_name, 'foods': days_lunches})
     return combined_foods
 
 
@@ -173,6 +167,7 @@ if __name__ == '__main__':
         LOG.info(" Parsing Unica-foods from week " + str(week_number))
         parser = UnicaParser(week_number)
     else:
+        LOG.error("Incorrect week number: " + str(week_number))
         sys.exit(1)
 
     restaurants = []
