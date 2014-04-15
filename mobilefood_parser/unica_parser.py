@@ -3,7 +3,7 @@
 from bs4 import BeautifulSoup as bs
 import urllib2 as url
 import re
-import json
+import json, jsonpickle
 import os
 import sys
 from datetime import datetime
@@ -12,7 +12,14 @@ import restaurant_urls as rest_urls
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger(' unica-parser ')
+
 _OUTPUTDIR = "../output"
+
+class Food (object):
+    def __init__(self, name, diets, prices):
+        self.name = name
+        self.diets = diets
+        self.prices = prices
 
 def load_page(link):
     page = None
@@ -71,6 +78,7 @@ class UnicaParser:
                 
                 day_number = int(day_element.get("data-dayofweek"))
 
+                #TODO: Handle when there is only alerts
                 lunch_elements = day.table.select(".lunch")
                 diet_elements = day.table.select(".limitations")
                 price_elements = day.table.select(".price")
@@ -90,9 +98,9 @@ class UnicaParser:
                 day_lunches = [encode_remove_eol(x.get_text() if x else "") for x in lunch_elements]
                 day_diets = [encode_remove_eol(x.get_text()) if x.span else "" for x in diet_elements]
                 day_prices = [re.findall(r'\d\,\d\d', encode_remove_eol(x.get_text())) for x in price_elements]
-            
-                lunches_to_prices = [{'name' : food, 'diets' : diets,'prices' : prices} for food, diets, prices in zip(day_lunches, day_diets, day_prices)]          
-                daily_foods.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})
+                    
+                lunches_to_prices = [Food(name, diets, prices) for name, diets, prices in zip(day_lunches, day_diets, day_prices)]
+                daily_foods.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})            
 
             restaurants_foods = {'restaurant_name': restaurant_name, 'lunches_by_day': daily_foods}
             return restaurants_foods
@@ -133,7 +141,9 @@ def combine_restaurants_foods(restaurants):
 
 def get_json(data):
     LOG.info(" Creating json format...")
-    return json.dumps(data)
+    #unpickable so that no tranforming back to python
+    return jsonpickle.encode(data, unpicklable=False);
+    #return json.dumps(data)
 
 
 def write_output_file(data, week_number, restaurant_name="", file_type="json"):
