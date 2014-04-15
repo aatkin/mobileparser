@@ -111,10 +111,10 @@ class UnicaParser:
 
             restaurants_foods = {'restaurant_name': restaurant_name, 'lunches_by_day': daily_foods}
 
-            kuis_hurisee = false
+            kuis_hurisee = False
             for day in daily_foods:
                 if len(day["lunches_to_prices"]) > 0:
-                    kuis_hurisee = true
+                    kuis_hurisee = True
                     break
             if not kuis_hurisee: return -1
 
