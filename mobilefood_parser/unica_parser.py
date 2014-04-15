@@ -113,11 +113,11 @@ class UnicaParser:
 
             kuis_hurisee = false
             for day in daily_foods:
-                if len(day["lunches_to_prices"]) > 0
+                if len(day["lunches_to_prices"]) > 0:
                     kuis_hurisee = true
                     break
             if not kuis_hurisee: return -1
-            
+
             return restaurants_foods
 
         except Exception, e:
