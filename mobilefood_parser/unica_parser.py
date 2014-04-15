@@ -86,30 +86,38 @@ class UnicaParser:
 
                 lunches_to_prices = []
 
-                if (len(lunch_elements) == 0) or not (len(lunch_elements) == len(diet_elements) == len(price_elements)):
-                    if len(alert_elements) > 0:
-                        LOG.info(" Caught alone alert-element inside day-table")
-                    else:
-                        error_message = " Problem detected while parsing foods:"
-                        if len(lunch_elements) == 0:
-                            error_message = error_message + " Food names could not be parsed."
-                        if len(diet_elements) == 0:
-                            error_message = error_message + " Diets could not be parsed."            
-                        if len(price_elements) == 0:
-                            error_message = error_message + " Prices could not be parsed."                 
-                        LOG.error(error_message)
-                        LOG.error("Could not parse weekday \n %s", day)
-                        return -1
+                # if (len(lunch_elements) == 0) or not (len(lunch_elements) == len(diet_elements) == len(price_elements)):
+                    # if len(alert_elements) > 0:
+                    #     LOG.info(" Caught alone alert-element inside day-table")
+                    # else:
+                    #     error_message = " Problem detected while parsing foods:"
+                    #     if len(lunch_elements) == 0:
+                    #         error_message = error_message + " Food names could not be parsed."
+                    #     if len(diet_elements) == 0:
+                    #         error_message = error_message + " Diets could not be parsed."            
+                    #     if len(price_elements) == 0:
+                    #         error_message = error_message + " Prices could not be parsed."                 
+                    #     LOG.error(error_message)
+                    #     LOG.error("Could not parse weekday \n %s", day)
+                    #     return -1
 
-                else:
-                    day_lunches = [encode_remove_eol(x.get_text() if x else "") for x in lunch_elements]
-                    day_diets = [encode_remove_eol(x.get_text()) if x.span else "" for x in diet_elements]
-                    day_prices = [re.findall(r'\d\,\d\d', encode_remove_eol(x.get_text())) for x in price_elements]                    
-                    lunches_to_prices = [Food(name, diets, prices) for name, diets, prices in zip(day_lunches, day_diets, day_prices)]
+                # else:
+                day_lunches = [encode_remove_eol(x.get_text() if x else "") for x in lunch_elements]
+                day_diets = [encode_remove_eol(x.get_text()) if x.span else "" for x in diet_elements]
+                day_prices = [re.findall(r'\d\,\d\d', encode_remove_eol(x.get_text())) for x in price_elements]                    
+                lunches_to_prices = [Food(name, diets, prices) for name, diets, prices in zip(day_lunches, day_diets, day_prices)]
 
                 daily_foods.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices})            
 
             restaurants_foods = {'restaurant_name': restaurant_name, 'lunches_by_day': daily_foods}
+
+            kuis_hurisee = false
+            for day in daily_foods:
+                if len(day["lunches_to_prices"]) > 0
+                    kuis_hurisee = true
+                    break
+            if not kuis_hurisee: return -1
+            
             return restaurants_foods
 
         except Exception, e:
