@@ -119,7 +119,7 @@ class UnicaParser(Parser):
                 if (not alert_element) and (len(lunch_elements) is 1) and (len(price_elements) is 1) and (len(day_prices[0]) is 0):
                     LOG.info(" Food without price, handling as alert, restaurant: " + str(restaurant_name) + ", day: " + str(day_element.get_text()))
                     alert = day_lunches[0]
-                    daily_foods.append(RestaurantDay(day_number, lunches_to_prices, alert))
+                    daily_foods.append(RestaurantDay(day_number, [], alert))
                 elif alert_element:
                     LOG.info(" Inserting alert message, restaurant: " + str(restaurant_name) + ", day: " + str(day_element.get_text()))
                     alert = encode_remove_eol(alert_element.get_text())
