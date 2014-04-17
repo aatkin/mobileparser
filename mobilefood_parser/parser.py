@@ -24,6 +24,11 @@ class Food(object):
         self.diets = diets
         self.prices = prices
 
+class Restaurant(object):
+    def __init__(self, restaurant_name, lunches_by_day):
+        self.name = restaurant_name
+        self.lunches_by_day = lunches_by_day
+
 # 
 # Parser abstract base class (interface)
 # 
@@ -112,7 +117,7 @@ class UnicaParser(Parser):
                 else:
                     daily_foods.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices, "alert": False})
 
-            restaurants_foods = {'restaurant_name': restaurant_name, 'lunches_by_day': daily_foods}
+            restaurants_foods = Restaurant(restaurant_name, daily_foods)
 
             foods_exist = False
             for day in daily_foods:
@@ -170,8 +175,8 @@ def combine_restaurants_foods(restaurants):
     LOG.info(" Combining restaurants...")
     combined_foods = []
     for restaurant in restaurants:
-        restaurant_name = restaurant['restaurant_name']
-        for day in restaurant['lunches_by_day']:
+        restaurant_name = restaurant.name
+        for day in restaurant.lunches_by_day:
             day_number = day['day_of_the_week']
             days_lunches = day['lunches_to_prices']
             alert = day['alert']
