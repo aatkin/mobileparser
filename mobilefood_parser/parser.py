@@ -29,6 +29,11 @@ class Restaurant(object):
         self.name = restaurant_name
         self.lunches_by_day = lunches_by_day
 
+class RestaurantDay(object):
+    def __init__(self, day_of_the_week, lunches_to_prices, alert):
+        self.day_of_the_week = day_of_the_week
+        self.lunches_to_prices = lunches_to_prices
+        self.alert = alert
 # 
 # Parser abstract base class (interface)
 # 
@@ -102,7 +107,7 @@ class UnicaParser(Parser):
                 lunch_elements = day.table.select(".lunch")
                 diet_elements = day.table.select(".limitations")
                 price_elements = day.table.select(".price")
-                alert_elements = day.table.select(".alert")
+                alert_element = day.table.find("span", { "class" : "alert" })
 
                 lunches_to_prices = []
 
@@ -111,17 +116,23 @@ class UnicaParser(Parser):
                 day_prices = [re.findall(r'\d\,\d\d', encode_remove_eol(x.get_text())) for x in price_elements]
                 lunches_to_prices = [Food(name, diets, prices) for name, diets, prices in zip(day_lunches, day_diets, day_prices)]
 
-                if (len(alert_elements) > 0) or (len(lunch_elements) < 1):
-                    LOG.info(" Inserting alert = true, restaurant: " + str(restaurant_name) + ", day: " + str(day_element))
-                    daily_foods.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices, "alert": True})
+                if (not alert_element) and (len(lunch_elements) is 1) and (len(price_elements) is 1) and (len(day_prices[0]) is 0):
+                    LOG.info(" Food without price, handling as alert, restaurant: " + str(restaurant_name) + ", day: " + str(day_element.get_text()))
+                    alert = day_lunches[0]
+                    daily_foods.append(RestaurantDay(day_number, lunches_to_prices, alert))
+                elif alert_element:
+                    LOG.info(" Inserting alert message, restaurant: " + str(restaurant_name) + ", day: " + str(day_element.get_text()))
+                    alert = encode_remove_eol(alert_element.get_text())
+                    daily_foods.append(RestaurantDay(day_number, lunches_to_prices, alert))
                 else:
-                    daily_foods.append({"day_of_the_week": day_number, "lunches_to_prices": lunches_to_prices, "alert": False})
+                    alert = ""
+                    daily_foods.append(RestaurantDay(day_number, lunches_to_prices, alert))
 
             restaurants_foods = Restaurant(restaurant_name, daily_foods)
 
             foods_exist = False
             for day in daily_foods:
-                if len(day["lunches_to_prices"]) > 0:
+                if len(day.lunches_to_prices) > 0:
                     foods_exist = True
                     break
 
@@ -175,18 +186,18 @@ def combine_restaurants_foods(restaurants):
     LOG.info(" Combining restaurants...")
     combined_foods = []
     for restaurant in restaurants:
-        restaurant_name = restaurant.name
         for day in restaurant.lunches_by_day:
-            day_number = day['day_of_the_week']
-            days_lunches = day['lunches_to_prices']
-            alert = day['alert']
+            day_number = day.day_of_the_week
+            days_lunches = day.lunches_to_prices
+            alert = day.alert
 
+            # inserts a new day if day_number does not exist yet
             if day_number not in range(len(combined_foods)):
                 combined_foods.append(
                     {'day': day_number, 'foods_by_restaurant': []})
 
             combined_foods[day_number]['foods_by_restaurant'].append(
-                {'restaurant_name': restaurant_name, 'foods': days_lunches, 'alert': alert})
+                {'restaurant_name': restaurant.name, 'foods': days_lunches, 'alert': alert})
     return combined_foods
 
 def get_json(data):
