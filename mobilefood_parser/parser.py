@@ -41,12 +41,13 @@ class Parser(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, week_number, name):
+    def __init__(self, week_number, name, version):
         """
-        Returns: new parser with proper week number and name initialized
+        Returns: new parser with proper week number,name and version initialized
         """
         self.week_number = week_number
         self.name = name
+        self.version = version
 
     @abstractmethod
     def parse(self):
@@ -66,18 +67,22 @@ class Parser(object):
 # Unica-parser, implements Parser abstract base class
 # 
 class UnicaParser(Parser):
-    def __init__(self, week_number, name):
-        super(UnicaParser, self).__init__(int(week_number), str(name))
+    def __init__(self, week_number, name, version):
+        super(UnicaParser, self).__init__(int(week_number), str(name), str(version))
 
     def assure_same_weeknumber(self, soup):
-        string = soup.select("div.pad > h3.head2")[0].get_text().encode("ascii", "ignore")
-        current_week_number = int(re.findall(r'\d\d', string)[0])
-        if(current_week_number != self.week_number):
-            LOG.error(" Expected week number  " + str(
-                self.week_number) + " but was " + str(self.week_number))
+        try:
+            string = soup.select("div.pad > h3.head2")[0].get_text().encode("ascii", "ignore")
+            current_week_number = int(re.findall(r'\d\d', string)[0])
+            if(current_week_number != self.week_number):
+                LOG.error(" Expected week number  " + str(
+                    self.week_number) + " but was " + str(self.week_number))
+                return -1
+            else:
+                return 0
+        except Exception, e:
+            LOG.exception(" Exception occured while checking week number\n %s", str(e))
             return -1
-        else:
-            return 0
 
     def parse_page(self, page):
         try:
@@ -158,6 +163,29 @@ class UnicaParser(Parser):
 
         return restaurants
 
+    def parse_restaurant_datas(self):
+        try:
+            page = load_page(rest_urls.UNICA_BASE_URL)
+            soup = bs(page, from_encoding='utf-8')
+            restaurants = soup.select("div#maplist ul.append-bottom li.color")
+            data = {'restaurants': []}
+            for restaurant in restaurants:
+                name = encode_remove_eol(restaurant.strong.get_text())
+                address = encode_remove_eol(restaurant.attrs['data-address'])
+                zip_code = encode_remove_eol(restaurant.attrs['data-zip'])
+                post_office = encode_remove_eol(restaurant.attrs['data-city'])
+                longitude = encode_remove_eol(restaurant.attrs['data-longitude'])
+                latitude = encode_remove_eol(restaurant.attrs['data-latitude'])
+                data['restaurants'].append({'name': name, 'address': address, 'zip': zip_code,
+                    'post office': post_office, 'longitude': longitude, 'latitude': latitude})
+                # print("Name: {0}, address: {1}, zip: {2}, longitude: {3}, latitude: {4}".format(
+                #     name, address, zip_code, longitude, latitude))
+            # print(data)
+            return data
+        except Exception, e:
+            LOG.exception(" Exception occured while parsing restaurant\n %s", str(e))
+            return -1
+
 # 
 # Static methods
 # 
@@ -200,6 +228,9 @@ def combine_restaurants_foods(restaurants):
                 {'restaurant_name': restaurant.name, 'foods': days_lunches, 'alert': alert})
     return combined_foods
 
+def format_output(restaurants, foods_by_day, parser):
+    return ["OK", parser.version, parser.name, foods_by_day, restaurants]
+
 def get_json(data):
     LOG.info(" Creating json format...")
     return jsonpickle.encode(data, unpicklable=False);
@@ -240,7 +271,7 @@ if __name__ == '__main__':
         week_number = datetime.now().isocalendar()[1]
 
     if week_number >= 1 and week_number <= 52:
-        parsers = [UnicaParser(week_number, "unica")]
+        parsers = [UnicaParser(week_number, "unica", "0.9")]
     else:
         LOG.error(" Incorrect week number: " + str(week_number) + "\n" + 
             "Week number needs to be in range [1, 52]")
@@ -248,7 +279,9 @@ if __name__ == '__main__':
 
     for parser in parsers:
         LOG = logging.getLogger(' unica-parser')
+        restaurants = parser.parse_restaurant_datas()
         foods = parser.parse()
         foods = combine_restaurants_foods(foods)
+        foods = format_output(restaurants, foods, parser)
         json_foods = get_json(foods)
         write_output_file(json_foods, week_number, parser.name)
