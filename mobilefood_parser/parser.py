@@ -229,7 +229,7 @@ def combine_restaurants_foods(restaurants):
     return combined_foods
 
 def format_output(restaurants, foods_by_day, parser):
-    return ["OK", parser.version, parser.name, foods_by_day, restaurants]
+    return [{'status': "OK"}, {'version': parser.version}, {'chain_name': parser.name}, foods_by_day, restaurants]
 
 def get_json(data):
     LOG.info(" Creating json format...")
