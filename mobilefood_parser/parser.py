@@ -225,7 +225,7 @@ def combine_restaurants_foods(restaurants):
                     {'day': day_number, 'foodsByRestaurant': []})
 
             combined_foods[day_number]['foodsByRestaurant'].append(
-                {'restaurantName': restaurant.name, 'foods': days_lunches, 'alert': alert})
+                {'restaurantName': restaurant.name, 'lunches': days_lunches, 'alert': alert})
     return combined_foods
 
 def format_output(restaurants, foods_by_day, parser):
