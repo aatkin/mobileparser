@@ -177,7 +177,7 @@ class UnicaParser(Parser):
                 longitude = encode_remove_eol(restaurant.attrs['data-longitude'])
                 latitude = encode_remove_eol(restaurant.attrs['data-latitude'])
                 restaurants.append({'name': name, 'address': address, 'zip': zip_code,
-                    'post office': post_office, 'longitude': longitude, 'latitude': latitude})
+                    'postOffice': post_office, 'longitude': longitude, 'latitude': latitude})
                 # print("Name: {0}, address: {1}, zip: {2}, longitude: {3}, latitude: {4}".format(
                 #     name, address, zip_code, longitude, latitude))
             # print(data)
@@ -222,14 +222,14 @@ def combine_restaurants_foods(restaurants):
             # inserts a new day if day_number does not exist yet
             if day_number not in range(len(combined_foods)):
                 combined_foods.append(
-                    {'day': day_number, 'foods_by_restaurant': []})
+                    {'day': day_number, 'foodsByRestaurant': []})
 
-            combined_foods[day_number]['foods_by_restaurant'].append(
-                {'restaurant_name': restaurant.name, 'foods': days_lunches, 'alert': alert})
+            combined_foods[day_number]['foodsByRestaurant'].append(
+                {'restaurantName': restaurant.name, 'foods': days_lunches, 'alert': alert})
     return combined_foods
 
 def format_output(restaurants, foods_by_day, parser):
-    return {'status': "OK", 'version': parser.version, 'chain_name': parser.name, 'foods_by_day': foods_by_day, 'restaurants': restaurants}
+    return {'status': "OK", 'version': parser.version, 'chainName': parser.name, 'foodsByDay': foods_by_day, 'restaurants': restaurants}
 
 def get_json(data):
     LOG.info(" Creating json format...")
