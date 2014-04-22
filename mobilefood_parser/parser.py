@@ -167,21 +167,21 @@ class UnicaParser(Parser):
         try:
             page = load_page(rest_urls.UNICA_BASE_URL)
             soup = bs(page, from_encoding='utf-8')
-            restaurants = soup.select("div#maplist ul.append-bottom li.color")
-            data = {'restaurants': []}
-            for restaurant in restaurants:
+            restaurant_elements = soup.select("div#maplist ul.append-bottom li.color")
+            restaurants = []
+            for restaurant in restaurant_elements:
                 name = encode_remove_eol(restaurant.strong.get_text())
                 address = encode_remove_eol(restaurant.attrs['data-address'])
                 zip_code = encode_remove_eol(restaurant.attrs['data-zip'])
                 post_office = encode_remove_eol(restaurant.attrs['data-city'])
                 longitude = encode_remove_eol(restaurant.attrs['data-longitude'])
                 latitude = encode_remove_eol(restaurant.attrs['data-latitude'])
-                data['restaurants'].append({'name': name, 'address': address, 'zip': zip_code,
+                restaurants.append({'name': name, 'address': address, 'zip': zip_code,
                     'post office': post_office, 'longitude': longitude, 'latitude': latitude})
                 # print("Name: {0}, address: {1}, zip: {2}, longitude: {3}, latitude: {4}".format(
                 #     name, address, zip_code, longitude, latitude))
             # print(data)
-            return data
+            return restaurants
         except Exception, e:
             LOG.exception(" Exception occured while parsing restaurant\n %s", str(e))
             return -1
@@ -229,7 +229,7 @@ def combine_restaurants_foods(restaurants):
     return combined_foods
 
 def format_output(restaurants, foods_by_day, parser):
-    return [{'status': "OK"}, {'version': parser.version}, {'chain_name': parser.name}, foods_by_day, restaurants]
+    return {'status': "OK", 'version': parser.version, 'chain_name': parser.name, 'foods_by_day': foods_by_day, 'restaurants': restaurants}
 
 def get_json(data):
     LOG.info(" Creating json format...")
