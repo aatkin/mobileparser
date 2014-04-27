@@ -89,6 +89,37 @@ class UnicaParser(Parser):
             soup = bs(page, from_encoding='utf-8')
             if self.assure_same_weeknumber(soup) == -1:
                 return -1
+
+            # contains opening hours
+            opening_hours = soup.select("#content .pad.mod .threecol")
+            # try:
+            #     paras = opening_hours[1].select("p")
+            #     print(len(paras))
+            #     # print(opening_hours[0].p)
+            # except:
+            #     # print(opening_hours[0].p)
+            #     pass
+            # print("opening_hours length: {0}".format(len(opening_hours)))
+            if len(opening_hours) > 1:
+                for section in opening_hours:
+                    section_title = str(encode_remove_eol(section.h3.get_text()))
+                    print("section_title: {0}".format(section_title))
+                    if section_title == 'Lounas':
+                        section_content = []
+                        if len(section.select("p")) > 1:
+                            for text in section.select("p"):
+                                print(str(encode_replace_eol(text.get_text())))
+                                section_content.append(encode_replace_eol(text.get_text()))
+                            section_content = sum(section_content, [])
+                        else:
+                            section_content = encode_replace_eol(section.p.get_text())
+                        # openings = {'lunch_times': section_content}
+                        print("title: {0}, content: {1}".format(section_title, section_content))
+            else:
+                section_title = encode_remove_eol(opening_hours[0].h3.get_text())
+                section_content = encode_replace_eol(opening_hours[0].p.get_text())
+                openings = {'lunch_times': section_content}
+                print("title: {0}, content: {1}".format(section_title, section_content))
             
             # contains the lunch menu
             menu_list = soup.select(".menu-list")[0]
@@ -206,6 +237,13 @@ def encode_remove_eol(text):
     characters in the middle and leading and trailing spaces. 
     """
     return text.encode('utf-8', 'ignore').strip().replace('\n', '').replace('\t','').replace('\r', '')
+
+def encode_replace_eol(text):
+    formatted = text.encode('utf-8', 'ignore').strip().replace('\n', '#').replace('\t','').replace('\r', '').replace('\xc2', '').replace('\xa0', '').split('#')
+    temp = []
+    for text in formatted:
+        temp.append(' '.join(text.split()))
+    return temp
 
 def combine_restaurants_foods(restaurants):
     """
