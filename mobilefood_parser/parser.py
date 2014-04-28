@@ -41,6 +41,14 @@ class RestaurantDay(object):
         self.day_of_the_week = day_of_the_week
         self.lunches_to_prices = lunches_to_prices
         self.alert = alert
+
+class OpeningHours(object):
+    def __init__(self, week_days, hours):
+        self.week_days = week_days
+        self.hours = hours
+
+    def __repr__(self):
+        return '%s{%s: %s}' % (self.__class__.__name__, self.week_days, self.hours)
 # 
 # Parser abstract base class (interface)
 # 
@@ -97,13 +105,14 @@ class UnicaParser(Parser):
             if self.assure_same_weeknumber(soup) == -1:
                 return -1
 
-            opening_hours = self.parse_opening_hours(soup)
             
             # contains the lunch menu
             menu_list = soup.select(".menu-list")[0]
 
             restaurant_name = encode_remove_eol(soup.select(".head")[0].get_text())
             daily_foods = []
+
+            self.opening_hours[restaurant_name] = self.parse_opening_hours(soup)
 
             # every day is inside accord-div
             week_days = menu_list.select(".accord")
@@ -191,7 +200,7 @@ class UnicaParser(Parser):
         return self.format_opening_times(section_contents)
 
     def format_opening_times(self, unformatted_contents):
-        opening_times = []
+        opening_hours = []
         for content in unformatted_contents:
             #remove klo
             content = content.replace(" klo", "")
@@ -206,19 +215,21 @@ class UnicaParser(Parser):
                 #openings without dates plus one for space
                 times_part = content[match_object.span()[1] + 1:]
                 times = re.match(_OPENING_TIMES_REGEX, times_part).group()
+                #add trailing zeros if they don't exist
                 times_split = times.split("-")
                 times_split = [time + ".00" if (len(time) <= 2) else time for time in times_split]
                 times = '-'.join(times_split)
 
-                opening_times.append({dates: times})
+                opening_hours.append(OpeningHours(dates, times))
             else:
                 break
         #TODO: if empty, log some error
 
-        print(opening_times)
-        return opening_times
+        print(opening_hours)
+        return opening_hours
 
     def parse(self):
+        self.opening_hours = {}
         restaurants = []
         for link in rest_urls.UNICA_URLS:
             page = load_page(link)
@@ -232,6 +243,11 @@ class UnicaParser(Parser):
         return restaurants
 
     def parse_restaurant_datas(self):
+        """
+        parse() method should be called before this so that opening times are parsed.
+
+        Returns: Parsed restaurant datas
+        """
         try:
             page = load_page(rest_urls.UNICA_BASE_URL)
             soup = bs(page, from_encoding='utf-8')
@@ -245,7 +261,7 @@ class UnicaParser(Parser):
                 longitude = encode_remove_eol(restaurant.attrs['data-longitude'])
                 latitude = encode_remove_eol(restaurant.attrs['data-latitude'])
                 restaurants.append({'name': name, 'address': address, 'zip': zip_code,
-                    'postOffice': post_office, 'longitude': longitude, 'latitude': latitude})
+                    'postOffice': post_office, 'longitude': longitude, 'latitude': latitude, 'openingHours': self.opening_hours[name]})
                 # print("Name: {0}, address: {1}, zip: {2}, longitude: {3}, latitude: {4}".format(
                 #     name, address, zip_code, longitude, latitude))
             # print(data)
@@ -354,8 +370,8 @@ if __name__ == '__main__':
 
     for parser in parsers:
         LOG = logging.getLogger(' unica-parser')
-        restaurants = parser.parse_restaurant_datas()
         foods = parser.parse()
+        restaurants = parser.parse_restaurant_datas()
         foods = combine_restaurants_foods(foods)
         foods = format_output(restaurants, foods, parser)
         json_foods = get_json(foods)
