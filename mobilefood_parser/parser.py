@@ -20,6 +20,8 @@ _OPENING_DATES_REGEX = "(ma|ti|ke|to|pe|la|su)(-(ma|ti|ke|to|pe|la|su))?"
 _OPENING_TIMES_REGEX = "([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?-([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?"
 _OPENINGS_REGEX = _OPENING_DATES_REGEX + "\s" + _OPENING_TIMES_REGEX
 
+_WEEK_DAYS = ['ma','ti','ke','to','pe','la','su']
+
 #
 # Food-class
 # 
@@ -95,7 +97,7 @@ class UnicaParser(Parser):
             if self.assure_same_weeknumber(soup) == -1:
                 return -1
 
-            self.parse_opening_hours(soup)
+            opening_hours = self.parse_opening_hours(soup)
             
             # contains the lunch menu
             menu_list = soup.select(".menu-list")[0]
@@ -174,30 +176,47 @@ class UnicaParser(Parser):
                     
                     if len(section.select("p")) > 1:
                         for text in section.select("p"):
-                            section_contents.append(encode_replace_eol(text.get_text()))
+                            section_contents.append(encode_replace_eol(text.get_text().lower()))
                         section_contents = sum(section_contents, [])
 
                     else:
-                        section_contents = encode_replace_eol(section.p.get_text())
+                        section_contents = encode_replace_eol(section.p.get_text().lower())
         else:
             if(len(opening_hours_elements) == 1):
                 section_title = encode_remove_eol(opening_hours_elements[0].h3.get_text())
-                section_contents = encode_replace_eol(opening_hours_elements[0].p.get_text())
+                section_contents = encode_replace_eol(opening_hours_elements[0].p.get_text().lower())
 
         print("title: {0}, content: {1}".format(section_title, section_contents))
 
-        #format opening times
+        return self.format_opening_times(section_contents)
+
+    def format_opening_times(self, unformatted_contents):
         opening_times = []
-        for content in section_contents:
+        for content in unformatted_contents:
+            #remove klo
+            content = content.replace(" klo", "")
             if re.match(_OPENINGS_REGEX, content):
                 match_object = re.match(_OPENING_DATES_REGEX, content)
                 dates = match_object.group()
+                dates_split = dates.split("-")
+                if len(dates_split) > 1:
+                    start_index, end_index = _WEEK_DAYS.index(dates_split[0]), _WEEK_DAYS.index(dates_split[1])
+                    #end_index is exclusive
+                    dates = ''.join(_WEEK_DAYS[start_index:end_index + 1])
                 #openings without dates plus one for space
                 times_part = content[match_object.span()[1] + 1:]
                 times = re.match(_OPENING_TIMES_REGEX, times_part).group()
-                print({dates: times})
+                if times.index("-") == len(times) - 3:
+                    #if 3rd last index is "-" add trailing zeros to time
+                    times = times + ".00"
+
+                opening_times.append({dates: times})
             else:
                 break
+        #TODO: if empty, log some error
+
+        print(opening_times)
+        return opening_times
 
     def parse(self):
         restaurants = []
