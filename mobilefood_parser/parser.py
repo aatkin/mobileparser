@@ -95,36 +95,7 @@ class UnicaParser(Parser):
             if self.assure_same_weeknumber(soup) == -1:
                 return -1
 
-            # contains opening hours
-            opening_hours = soup.select("#content .pad.mod .threecol")
-            # try:
-            #     paras = opening_hours[1].select("p")
-            #     print(len(paras))
-            #     # print(opening_hours[0].p)
-            # except:
-            #     # print(opening_hours[0].p)
-            #     pass
-            # print("opening_hours length: {0}".format(len(opening_hours)))
-            if len(opening_hours) > 1:
-                for section in opening_hours:
-                    section_title = str(encode_remove_eol(section.h3.get_text()))
-                    print("section_title: {0}".format(section_title))
-                    if section_title == 'Lounas':
-                        section_content = []
-                        if len(section.select("p")) > 1:
-                            for text in section.select("p"):
-                                print(str(encode_replace_eol(text.get_text())))
-                                section_content.append(encode_replace_eol(text.get_text()))
-                            section_content = sum(section_content, [])
-                        else:
-                            section_content = encode_replace_eol(section.p.get_text())
-                        # openings = {'lunch_times': section_content}
-                        print("title: {0}, content: {1}".format(section_title, section_content))
-            else:
-                section_title = encode_remove_eol(opening_hours[0].h3.get_text())
-                section_content = encode_replace_eol(opening_hours[0].p.get_text())
-                openings = {'lunch_times': section_content}
-                print("title: {0}, content: {1}".format(section_title, section_content))
+            self.parse_opening_hours(soup)
             
             # contains the lunch menu
             menu_list = soup.select(".menu-list")[0]
@@ -186,8 +157,47 @@ class UnicaParser(Parser):
             LOG.exception(" Exception occured while parsing... \n %s", str(e))
             return -1
 
-    def parse_opening_hours(soup):
-        regex = "(ma|ti|ke|to|pe|la|su)(-(ma|ti|ke|to|pe|la|su))?\s([2][0-4]|[0-1][0-9])(\.([2][0-4]|[0-1][0-9]))?-([2][0-4]|[0-1][0-9])(\.([2][0-4]|[0-1][0-9]))?"
+    def parse_opening_hours(self, soup):
+        # contains opening hours
+        opening_hours_elements = soup.select("#content .pad.mod .threecol")
+        section_title = None
+        section_contents = []
+
+        # has opening hours and lunch times separately
+        if len(opening_hours_elements) > 1:
+            
+            for section in opening_hours_elements:
+                section_title = str(encode_remove_eol(section.h3.get_text()))
+                print("section_title: {0}".format(section_title))
+                
+                if section_title == 'Lounas':
+                    
+                    if len(section.select("p")) > 1:
+                        for text in section.select("p"):
+                            section_contents.append(encode_replace_eol(text.get_text()))
+                        section_contents = sum(section_contents, [])
+
+                    else:
+                        section_contents = encode_replace_eol(section.p.get_text())
+        else:
+            if(len(opening_hours_elements) == 1):
+                section_title = encode_remove_eol(opening_hours_elements[0].h3.get_text())
+                section_contents = encode_replace_eol(opening_hours_elements[0].p.get_text())
+
+        print("title: {0}, content: {1}".format(section_title, section_contents))
+
+        #format opening times
+        opening_times = []
+        for content in section_contents:
+            if re.match(_OPENINGS_REGEX, content):
+                match_object = re.match(_OPENING_DATES_REGEX, content)
+                dates = match_object.group()
+                #openings without dates plus one for space
+                times_part = content[match_object.span()[1] + 1:]
+                times = re.match(_OPENING_TIMES_REGEX, times_part).group()
+                print({dates: times})
+            else:
+                break
 
     def parse(self):
         restaurants = []
