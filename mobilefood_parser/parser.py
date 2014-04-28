@@ -15,6 +15,11 @@ logging.basicConfig(level=logging.INFO)
 
 _OUTPUTDIR = "../output"
 
+#Opening time RegExes
+_OPENING_DATES_REGEX = "(ma|ti|ke|to|pe|la|su)(-(ma|ti|ke|to|pe|la|su))?"
+_OPENING_TIMES_REGEX = "([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?-([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?"
+_OPENINGS_REGEX = _OPENING_DATES_REGEX + "\s" + _OPENING_TIMES_REGEX
+
 #
 # Food-class
 # 
@@ -180,6 +185,9 @@ class UnicaParser(Parser):
         except Exception, e:
             LOG.exception(" Exception occured while parsing... \n %s", str(e))
             return -1
+
+    def parse_opening_hours(soup):
+        regex = "(ma|ti|ke|to|pe|la|su)(-(ma|ti|ke|to|pe|la|su))?\s([2][0-4]|[0-1][0-9])(\.([2][0-4]|[0-1][0-9]))?-([2][0-4]|[0-1][0-9])(\.([2][0-4]|[0-1][0-9]))?"
 
     def parse(self):
         restaurants = []
