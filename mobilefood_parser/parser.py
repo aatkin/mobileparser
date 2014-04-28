@@ -206,9 +206,9 @@ class UnicaParser(Parser):
                 #openings without dates plus one for space
                 times_part = content[match_object.span()[1] + 1:]
                 times = re.match(_OPENING_TIMES_REGEX, times_part).group()
-                if times.index("-") == len(times) - 3:
-                    #if 3rd last index is "-" add trailing zeros to time
-                    times = times + ".00"
+                times_split = times.split("-")
+                times_split = [time + ".00" if (len(time) <= 2) else time for time in times_split]
+                times = '-'.join(times_split)
 
                 opening_times.append({dates: times})
             else:
