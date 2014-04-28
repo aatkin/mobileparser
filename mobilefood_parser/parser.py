@@ -43,12 +43,12 @@ class RestaurantDay(object):
         self.alert = alert
 
 class OpeningHours(object):
-    def __init__(self, week_days, hours):
-        self.week_days = week_days
+    def __init__(self, weekDays, hours):
+        self.weekDays = weekDays
         self.hours = hours
 
     def __repr__(self):
-        return '%s{%s: %s}' % (self.__class__.__name__, self.week_days, self.hours)
+        return '%s{%s: %s}' % (self.__class__.__name__, self.weekDays, self.hours)
 # 
 # Parser abstract base class (interface)
 # 
@@ -261,7 +261,7 @@ class UnicaParser(Parser):
                 longitude = encode_remove_eol(restaurant.attrs['data-longitude'])
                 latitude = encode_remove_eol(restaurant.attrs['data-latitude'])
                 restaurants.append({'name': name, 'address': address, 'zip': zip_code,
-                    'postOffice': post_office, 'longitude': longitude, 'latitude': latitude, 'openingHours': self.opening_hours[name]})
+                    'postOffice': post_office, 'longitude': longitude, 'latitude': latitude, 'lunchTimes': self.opening_hours[name]})
                 # print("Name: {0}, address: {1}, zip: {2}, longitude: {3}, latitude: {4}".format(
                 #     name, address, zip_code, longitude, latitude))
             # print(data)
