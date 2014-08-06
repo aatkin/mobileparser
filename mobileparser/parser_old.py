@@ -15,26 +15,26 @@ logging.basicConfig(level=logging.INFO)
 
 _OUTPUTDIR = "../output"
 
-#Opening time RegExes
-_OPENING_DATES_REGEX = "(ma|ti|ke|to|pe|la|su)(-(ma|ti|ke|to|pe|la|su))?"
-_OPENING_TIMES_REGEX = "([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?-([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?"
-_OPENINGS_REGEX = _OPENING_DATES_REGEX + "\s" + _OPENING_TIMES_REGEX
+# Opening time RegExes
+# _OPENING_DATES_REGEX = "(ma|ti|ke|to|pe|la|su)(-(ma|ti|ke|to|pe|la|su))?"
+# _OPENING_TIMES_REGEX = "([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?-([2][0-4]|[0-1][0-9])(\.[0-5][0-9])?"
+# _OPENINGS_REGEX = _OPENING_DATES_REGEX + "\s" + _OPENING_TIMES_REGEX
 
-_WEEK_DAYS = ['ma','ti','ke','to','pe','la','su']
+# _WEEK_DAYS = ['ma','ti','ke','to','pe','la','su']
 
-#
-# Food-class
-# 
+
 class Food(object):
     def __init__(self, name, diets, prices):
         self.name = name
         self.diets = diets
         self.prices = prices
 
+
 class Restaurant(object):
     def __init__(self, restaurant_name, lunches_by_day):
         self.name = restaurant_name
         self.lunches_by_day = lunches_by_day
+
 
 class RestaurantDay(object):
     def __init__(self, day_of_the_week, lunches_to_prices, alert):
@@ -42,16 +42,15 @@ class RestaurantDay(object):
         self.lunches_to_prices = lunches_to_prices
         self.alert = alert
 
+
 class OpeningHours(object):
     def __init__(self, weekDays, hours):
         self.weekDays = weekDays
         self.hours = hours
 
-    def __repr__(self):
-        return '%s{%s: %s}' % (self.__class__.__name__, self.weekDays, self.hours)
-# 
+#
 # Parser abstract base class (interface)
-# 
+#
 class Parser(object):
     __metaclass__ = ABCMeta
 

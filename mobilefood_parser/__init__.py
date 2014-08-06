@@ -1,2 +1,0 @@
-import restaurant_urls
-import parser
