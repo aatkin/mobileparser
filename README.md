@@ -1,4 +1,4 @@
-# mobilefood-parser [![Build Status](https://travis-ci.org/aatkin/mobilefood-parser.png)](https://travis-ci.org/aatkin/mobilefood-parser) #
+# mobilefood-parser [![Build Status](https://travis-ci.org/aatkin/mobileparser.png)](https://travis-ci.org/aatkin/mobileparser) #
 
 ## HTML parser for Mobilefood project ##
 
