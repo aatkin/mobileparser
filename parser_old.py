@@ -53,7 +53,6 @@ class OpeningHours(object):
 #
 class Parser(object):
     __metaclass__ = ABCMeta
-
     @abstractmethod
     def __init__(self, week_number, name, version):
         """
