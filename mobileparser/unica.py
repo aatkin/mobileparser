@@ -25,17 +25,26 @@ UNICA_RUOKAKELLO = {"name": "Ruokakello",
                     "url": UNICA_BASE_URL + "ruokakello/"}
 UNICA_TOTTISALMI = {"name": "Tottisalmi",
                     "url": UNICA_BASE_URL + "tottisalmi/"}
+UNICA_RESTAURANTS = [UNICA_ASSARI, UNICA_BRYGGE, UNICA_DELICA,
+                     UNICA_DELIPHARMA, UNICA_DENTAL, UNICA_MACCIAVELLI,
+                     UNICA_MIKRO, UNICA_MYSSY, UNICA_NUTRITIO,
+                     UNICA_RUOKAKELLO, UNICA_TOTTISALMI]
 
 
 class Unica(Parser):
+    # @abstractmethod
     def __init__(self):
         super(Unica, self).__init__("Unica", __version__)
         self.logger = logging.getLogger(" {0}".format(__name__))
 
-    def parse_html(self, html):
+    # @abstractmethod
+    def parse_page(self, page):
+        pass
+
+    def parse_foods(self, html):
         return bs(html)
 
-    def assert_foods_not_empty(self, soap):
+    def assert_foodlist_exist(self, soap):
         array = soap.select("#content .pad .menu-list")
         return (len(array) != 0)
 

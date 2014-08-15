@@ -16,12 +16,12 @@ class Parser():
         self.version = version
 
     @abstractmethod
-    def parse_html(self, html):
+    def parse_page(self, page):
         """
-        Parses given html and returns daily foods as a dictionary of form
+        Parses given page and returns daily foods as a dictionary of form
         {parser_name: name, parser_version: version, restaurant: Restaurant}
 
-        >>> Unica.parse_html(macciavelli)
+        >>> Unica.parse_page(macciavelli)
         {parser_name: "Unica", parser_version: "0.1.0", restaurant: Restaurant}
         """
         pass

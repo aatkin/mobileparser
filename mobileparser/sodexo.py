@@ -8,9 +8,11 @@ from parser_abc import Parser, Week, Day, Food
 
 
 class Sodexo(Parser):
+    # @abstractmethod
     def __init__(self):
         super(Sodexo, self).__init__("Sodexo", __version__)
         self.logger = logging.getLogger(" {0}".format(__name__))
 
-    def parse_html(self, html):
+    # @abstractmethod
+    def parse_page(self, page):
         pass
