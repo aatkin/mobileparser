@@ -37,14 +37,16 @@ class Unica(Parser):
         #     '\n', '').replace('\t', '').replace('\r', '')
         return bs(html)
 
-    def assert_foods_not_empty(self, html):
-        pass
+    def assert_foods_not_empty(self, soap):
+        array = soap.select("#content .pad .menu-list")
+        return (len(array) != 0)
 
     def load_page(self, link):
         try:
             self.logger.info(" Loading page " + link)
             html = requests.get(link)
             return html
+
         except requests.ConnectionError, error:
             self.logger.error(
                 """
@@ -52,6 +54,7 @@ class Unica(Parser):
                 {1}
                 """.format(str(link), str(error)))
             return 1
+
         except requests.Timeout, error:
             self.logger.error(
                 """
@@ -59,6 +62,7 @@ class Unica(Parser):
                 {1}
                 """.format(str(link), str(error)))
             return 2
+
         except Exception, error:
             self.logger.exception(
                 """
