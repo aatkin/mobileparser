@@ -2,7 +2,9 @@
 
 __version__ = '0.1.3'
 
+import logging
 from bs4 import BeautifulSoup as bs
+import requests
 from parser_abc import Parser, Restaurant, Food
 
 UNICA_BASE_URL = "http://www.unica.fi/fi/ravintolat/"
@@ -26,18 +28,37 @@ UNICA_TOTTISALMI = {"name": "Tottisalmi",
 
 
 class Unica(Parser):
-    def __init__(self, logger):
+    def __init__(self):
         super(Unica, self).__init__("Unica", __version__)
-        self.logger = logger
+        self.logger = logging.getLogger(" {0}".format(__name__))
 
-    def parse_html(html):
+    def parse_html(self, html):
         pass
 
-    def load_page(link):
+    def load_page(self, link):
         try:
-            LOG.info(" Loading page... " + link)
-            page = url.urlopen(link).read()
-            return page
-        except url.URLError, e:
-            LOG.exception(" Unable to connect to a given link: \n %s", str(e))
-            return -1
+            self.logger.info(" Loading page " + link)
+            r = requests.get(link)
+            r.encoding = "utf-8"
+            return r.text
+        except requests.ConnectionError, error:
+            self.logger.error(
+                """
+                A network problem occurred while loading given URL {0}
+                {1}
+                """.format(str(link), str(error)))
+            return 1
+        except requests.Timeout, error:
+            self.logger.error(
+                """
+                Request timed out while loading given URL {0}
+                {1}
+                """.format(str(link), str(error)))
+            return 2
+        except Exception, error:
+            self.logger.exception(
+                """
+                Error happened while loading given URL {0}
+                {1}
+                """.format(str(link), str(error)))
+            return 3
