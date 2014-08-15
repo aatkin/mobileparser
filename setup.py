@@ -15,7 +15,8 @@ setup(
     version=__version__,
     url='https://github.com/aatkin/mobilefood-parser',
     author='Anssi Kinnunen',
-    author='aatkin@utu.fi',
+    author_email='aatkin@utu.fi',
+    collaborator='Ville Ahti',
     license='MIT License'
     packages=packages,
     install_requires=install_requires,
