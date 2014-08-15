@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 import logging
 from bs4 import BeautifulSoup as bs
 import requests
-from parser_abc import Parser, Restaurant, Food
+from parser_abc import Parser, Week, Day, Food
 
 UNICA_BASE_URL = "http://www.unica.fi/fi/ravintolat/"
 UNICA_ASSARI = {"name": "Assarin ullakko",
@@ -33,14 +33,18 @@ class Unica(Parser):
         self.logger = logging.getLogger(" {0}".format(__name__))
 
     def parse_html(self, html):
+        # html = r.text.encode('utf-8', 'ignore').strip().replace(
+        #     '\n', '').replace('\t', '').replace('\r', '')
+        return bs(html)
+
+    def assert_foods_not_empty(self, html):
         pass
 
     def load_page(self, link):
         try:
             self.logger.info(" Loading page " + link)
-            r = requests.get(link)
-            r.encoding = "utf-8"
-            return r.text
+            html = requests.get(link)
+            return html
         except requests.ConnectionError, error:
             self.logger.error(
                 """

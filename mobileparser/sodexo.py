@@ -4,7 +4,7 @@ __version__ = '0.1.0'
 
 import logging
 from bs4 import BeautifulSoup as bs
-from parser_abc import Parser, Restaurant, Food
+from parser_abc import Parser, Week, Day, Food
 
 
 class Sodexo(Parser):

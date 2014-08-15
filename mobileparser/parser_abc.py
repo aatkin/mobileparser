@@ -27,13 +27,34 @@ class Parser():
         pass
 
 
-class Restaurant(object):
-    def __init__(self, name, daily_foods):
-        self.name = name
+class Week(object):
+    """
+    Represents weekly foods of a given restaurant. weekly_foods consists of
+    a list of Day-objects.
+    >>> Week(32, "Unica", [Day(...), Day(...), ...])
+    """
+    def __init__(self, week_number, restaurant_name, weekly_foods):
+        self.week_number = week_number
+        self.restaurant_name = restaurant_name
         self.daily_foods = daily_foods
 
 
+class Day(object):
+    """
+    Represents a single day of a restaurants food list. daily_foods consists
+    of a list of Food-objects.
+    >>> Day("Monday", 0, [Food(...), Food(...), ...])
+    """
+    def __init__(self, name, week_day, daily_foods):
+        self.name = name
+        self.week_day = week_day
+        self.daily_foods = daily
+
+
 class Food(object):
+    """
+    Represents a single food.
+    """
     def __init__(self, name, diets, prices):
         self.name = name
         self.diets = diets

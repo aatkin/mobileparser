@@ -14,7 +14,7 @@ def main(argv):
     print "Mobileparser", __version__
     print unica_parser.name, unica_parser.version
     print sodexo_parser.name, sodexo_parser.version
-    page = unica_parser.load_page('httfp://www.google.fi')
+    html = unica_parser.load_page("http://www.unica.fi/fi")
 
 if __name__ == "__main__":
     main(sys.argv)
