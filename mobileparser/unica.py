@@ -33,13 +33,15 @@ class Unica(Parser):
         self.logger = logging.getLogger(" {0}".format(__name__))
 
     def parse_html(self, html):
-        # html = r.text.encode('utf-8', 'ignore').strip().replace(
-        #     '\n', '').replace('\t', '').replace('\r', '')
         return bs(html)
 
     def assert_foods_not_empty(self, soap):
         array = soap.select("#content .pad .menu-list")
         return (len(array) != 0)
+
+    def encode_remove_eol(self, text):
+        return text.encode('utf-8', 'ignore').strip().replace(
+            '\n', '').replace('\t', '').replace('\r', '')
 
     def load_page(self, link):
         try:
