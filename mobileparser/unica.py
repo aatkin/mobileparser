@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 import logging
 from bs4 import BeautifulSoup as bs
 import requests
-from parser_abc import Parser, Week, Day, Food
+from parser_abc import Parser, Restaurant, Day, Food
 
 UNICA_BASE_URL = "http://www.unica.fi/fi/ravintolat/"
 UNICA_ASSARI = {"name": "Assarin ullakko",
@@ -38,46 +38,40 @@ class Unica(Parser):
         self.logger = logging.getLogger(" {0}".format(__name__))
 
     # @abstractmethod
-    def parse_page(self, page):
+    def parse(self):
         pass
 
-    def parse_foods(self, html):
-        return bs(html)
+    # @abstractmethod
+    def parse_page(self, link):
+        pass
+
+    def parse_foods(self, soap):
+        pass
+
+    def parse_opening_times(self, soap):
+        pass
+
+    def parse_restaurant_info(self, soap):
+        pass
 
     def assert_foodlist_exist(self, soap):
         array = soap.select("#content .pad .menu-list")
         return (len(array) != 0)
 
     def encode_remove_eol(self, text):
-        return text.encode('utf-8', 'ignore').strip().replace(
-            '\n', '').replace('\t', '').replace('\r', '')
+        try:
+            return text.encode('utf-8', 'ignore').strip().replace(
+                '\n', '').replace('\t', '').replace('\r', '')
+        except UnicodeEncodeError, e:
+            raise Exception(e)
 
     def load_page(self, link):
         try:
             self.logger.info(" Loading page " + link)
             html = requests.get(link)
             return html
+        except Exception, e:
+            raise Exception(e)
 
-        except requests.ConnectionError, error:
-            self.logger.error(
-                """
-                A network problem occurred while loading given URL {0}
-                {1}
-                """.format(str(link), str(error)))
-            return 1
-
-        except requests.Timeout, error:
-            self.logger.error(
-                """
-                Request timed out while loading given URL {0}
-                {1}
-                """.format(str(link), str(error)))
-            return 2
-
-        except Exception, error:
-            self.logger.exception(
-                """
-                Error happened while loading given URL {0}
-                {1}
-                """.format(str(link), str(error)))
-            return 3
+    def __repr__(self):
+        return "{0} version {1}".format(self.name, __version__)

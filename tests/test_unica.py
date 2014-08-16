@@ -17,8 +17,11 @@ class TestUnica(unittest.TestCase):
         except Exception, error:
             print error
 
-    def test_assari_foodlist_not_empty(self):
-        assert self.unica_parser.assert_foodlist_exist(self.assari)
+    def test_assaris_foodlist_isnt_empty(self):
+        foodlist_exists = self.unica_parser.assert_foodlist_exist(self.assari)
+        assert foodlist_exists
 
-    def test_delipharmas_foods_are_empty(self):
-        assert not self.unica_parser.assert_foodlist_exist(self.delipharma)
+    def test_delipharmas_foodlist_is_empty(self):
+        foodlist_exists = self.unica_parser.assert_foodlist_exist(
+            self.delipharma)
+        assert not foodlist_exists
