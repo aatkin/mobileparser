@@ -26,17 +26,29 @@ class Parser():
         """
         pass
 
+    @abstractmethod
+    def parse(self):
+        """
+        Parses all the restaurants defined in the parser's source, using the
+        parse_page(self, page) function.
 
-class Week(object):
+        >>> Unica.parse()
+        {parser_name: "Unica", parser_version: __version__, restaurants: {
+        "0": Restaurant(...), "1": ... }}
+        """
+        pass
+
+
+class Restaurant(object):
     """
     Represents weekly foods of a given restaurant. weekly_foods consists of
-    a list of Day-objects.
-    >>> Week(32, "Unica", [Day(...), Day(...), ...])
+    a dict of Day-objects.
+    >>> Restaurant(32, "Delipharma", weekly_foods: {"0": Day(...), "1": ...})
     """
     def __init__(self, week_number, restaurant_name, weekly_foods):
         self.week_number = week_number
         self.restaurant_name = restaurant_name
-        self.daily_foods = daily_foods
+        self.weekly_foods = weekly_foods
 
 
 class Day(object):
@@ -48,7 +60,7 @@ class Day(object):
     def __init__(self, name, week_day, daily_foods):
         self.name = name
         self.week_day = week_day
-        self.daily_foods = daily
+        self.daily_foods = daily_foods
 
 
 class Food(object):
