@@ -4,3 +4,5 @@
 build/
 log
 env/
+package.json
+node_modules/
