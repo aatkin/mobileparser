@@ -1,5 +1,6 @@
 import unittest
 from bs4 import BeautifulSoup as bs
+import lxml
 from mobileparser.unica import Unica
 
 
@@ -9,10 +10,10 @@ class TestUnica(unittest.TestCase):
         self.unica_parser = Unica()
         try:
             f = open('tests/resources/assari.html', 'r')
-            self.assari = bs(f.read())
+            self.assari = bs(f.read(), "lxml")
             f.close()
             f = open('tests/resources/delipharma.html', 'r')
-            self.delipharma = bs(f.read())
+            self.delipharma = bs(f.read(), "lxml")
             f.close()
         except Exception, error:
             print error

@@ -5,6 +5,7 @@ __version__ = '0.1.5'
 import logging
 from bs4 import BeautifulSoup as bs
 import requests
+import lxml
 from parser_abc import Parser, Restaurant, Day, Food
 
 UNICA_BASE_URL = "http://www.unica.fi/fi/ravintolat/"
