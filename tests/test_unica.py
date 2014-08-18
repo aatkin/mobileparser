@@ -15,6 +15,8 @@ class TestUnica(unittest.TestCase):
                 'tests/resources/delipharma.html')
             self.delipharma_swe = self.read_and_parse_file(
                 'tests/resources/delipharma_se.html')
+            self.macciavelli_en = self.read_and_parse_file(
+                'tests/resources/macciavelli_en.html')
         except Exception, error:
             print error
 
@@ -40,3 +42,19 @@ class TestUnica(unittest.TestCase):
         foodlist_exists = self.unica_parser.assert_foodlist_exist(
             self.delipharma_swe)
         assert not foodlist_exists
+
+    def test_that_assari_has_6_weekly_foods(self):
+        foodlist_exists = self.unica_parser.assert_foodlist_exist(
+            self.assari)
+        weekly_foods = self.unica_parser.parse_foods(
+            self.assari)
+        assert foodlist_exists
+        assert len(weekly_foods) == 6
+
+    def test_that_en_macciavelli_has_5_weekly_foods(self):
+        foodlist_exists = self.unica_parser.assert_foodlist_exist(
+            self.macciavelli_en)
+        weekly_foods = self.unica_parser.parse_foods(
+            self.macciavelli_en)
+        assert foodlist_exists
+        assert len(weekly_foods) == 5
