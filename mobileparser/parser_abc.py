@@ -57,10 +57,11 @@ class Day(object):
     of a list of Food-objects.
     >>> Day("Monday", 0, [Food(...), Food(...), ...])
     """
-    def __init__(self, name, week_day, daily_foods):
+    def __init__(self, name, week_day, daily_foods, alerts=""):
         self.name = name
         self.week_day = week_day
         self.daily_foods = daily_foods
+        self.alerts = alerts
 
 
 class Food(object):
