@@ -58,8 +58,11 @@ class Unica(Parser):
                 lunch_elements = day.table.select(".lunch")
                 diet_elements = day.table.select(".limitations")
                 price_elements = day.table.select(".price")
-                alert_element = self.encode_remove_eol(day.table.find(
-                    "span", {"class": "alert"}).getText())
+                try:
+                    alert_element = self.encode_remove_eol(day.table.find(
+                        "span", {"class": "alert"}).getText())
+                except Exception, e:
+                    alert_element = ""
 
                 daily_lunches = [self.encode_remove_eol(x.getText())
                                  for x in lunch_elements]
