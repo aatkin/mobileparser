@@ -82,6 +82,7 @@ class Unica(Parser):
         return weekly_foods
 
     def parse_opening_times(self, soup):
+        print "todo"
         pass
 
     def parse_restaurant_info(self, soup):
