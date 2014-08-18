@@ -75,9 +75,9 @@ class Unica(Parser):
                                                               daily_diets,
                                                               daily_prices)]
                 weekly_foods[day_number] = Day(
-                    day_name, day_number, daily_foods)
+                    day_name, day_number, daily_foods, alert_element)
             except Exception, e:
-                raise Exception(e)
+                self.logger.exception(e)
 
         return weekly_foods
 
@@ -100,7 +100,8 @@ class Unica(Parser):
             return text.encode('utf-8', 'ignore').strip().replace(
                 '\n', '').replace('\t', '').replace('\r', '')
         except UnicodeEncodeError, e:
-            raise Exception(e)
+            self.logger.exception(e)
+            return text
 
     def load_page(self, link):
         try:
