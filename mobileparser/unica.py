@@ -56,8 +56,11 @@ class Unica(Parser):
         pass
 
     def assert_foodlist_exist(self, soap):
-        array = soap.select("#content .pad .menu-list")
-        return (len(array) != 0)
+        menu_list = soap.select("#content .pad .menu-list")
+        lunches = soap.select("#content .pad .menu-list .lunch")
+        menu_isnt_empty = len(menu_list) != 0
+        lunches_arent_empty = len(lunches) != 0
+        return (menu_isnt_empty and lunches_arent_empty)
 
     def encode_remove_eol(self, text):
         try:
