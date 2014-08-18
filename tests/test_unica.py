@@ -83,3 +83,13 @@ class TestUnica(unittest.TestCase):
         self.assertEqual(weekly_foods[2].alert, "")
         self.assertEqual(weekly_foods[3].alert, "")
         self.assertEqual(weekly_foods[4].alert, "")
+
+    def test_that_assari_is_on_week_33(self):
+        """Test that assari's lunch menu is from week 33"""
+        week_number = self.unica_parser.parse_week_number(self.assari)
+        assert week_number == 33
+
+    def test_that_delica_is_on_week_34(self):
+        """Test that delica's lunch menu is from week 34"""
+        week_number = self.unica_parser.parse_week_number(self.delica)
+        assert week_number == 34

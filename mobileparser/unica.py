@@ -88,6 +88,15 @@ class Unica(Parser):
     def parse_restaurant_info(self, soup):
         pass
 
+    def parse_week_number(self, soup):
+        try:
+            head_element = soup.select(
+                "#content .pad .head2")[0].getText().encode("utf-8", "ignore")
+            week_number = int(re.findall(r"\d\d", head_element)[0])
+            return week_number
+        except Exception, e:
+            self.logger.exception(e)
+
     def assert_foodlist_exist(self, soup):
         menu_list = soup.select("#content .pad .menu-list")
         lunches = soup.select("#content .pad .menu-list .lunch")
