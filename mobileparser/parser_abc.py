@@ -55,13 +55,13 @@ class Day(object):
     """
     Represents a single day of a restaurants food list. daily_foods consists
     of a list of Food-objects.
-    >>> Day("Monday", 0, [Food(...), Food(...), ...])
+    >>> Day("Monday", 0, [Food(...), Food(...), ...], "alert?...")
     """
-    def __init__(self, name, week_day, daily_foods, alerts=""):
+    def __init__(self, name, week_day, daily_foods, alert=""):
         self.name = name
         self.week_day = week_day
         self.daily_foods = daily_foods
-        self.alerts = alerts
+        self.alert = alert
 
 
 class Food(object):
