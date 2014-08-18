@@ -15,10 +15,6 @@ def main(argv):
     print "Mobileparser version", __version__
     print unica_parser
     print sodexo_parser
-    try:
-        html = unica_parser.load_page("httpasd://www.unica.fi/fi")
-    except Exception, e:
-        logger.exception(e)
 
 if __name__ == "__main__":
     main(sys.argv)
