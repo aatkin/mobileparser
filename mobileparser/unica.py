@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '0.1.5'
+__version__ = '0.2.0'
 
 import logging
-from bs4 import BeautifulSoup as bs
 import requests
 import lxml
+import re
+from bs4 import BeautifulSoup as bs
 from parser_abc import Parser, Restaurant, Day, Food
 
 UNICA_BASE_URL = "http://www.unica.fi/fi/ravintolat/"
@@ -46,18 +47,46 @@ class Unica(Parser):
     def parse_page(self, link):
         pass
 
-    def parse_foods(self, soap):
+    def parse_foods(self, soup):
+        weekly_foods = {}
+        week_days = soup.select("#content .menu-list .accord")
+        for index, day in enumerate(week_days):
+            try:
+                day_name = self.encode_remove_eol(day.h4.getText())
+                day_number = index
+
+                lunch_elements = day.table.select(".lunch")
+                diet_elements = day.table.select(".limitations")
+                price_elements = day.table.select(".price")
+                alert_element = self.encode_remove_eol(day.table.find(
+                    "span", {"class": "alert"}).getText())
+
+                daily_lunches = [self.encode_remove_eol(x.getText())
+                                 for x in lunch_elements]
+                daily_diets = [self.encode_remove_eol(x.getText())
+                               for x in diet_elements]
+                daily_prices = [re.findall(r"\d\,\d\d", self.encode_remove_eol(
+                    x.getText())) for x in price_elements]
+                daily_foods = [Food(name, diets, prices)
+                               for name, diets, prices in zip(daily_lunches,
+                                                              daily_diets,
+                                                              daily_prices)]
+                weekly_foods[day_number] = Day(
+                    day_name, day_number, daily_foods)
+            except Exception, e:
+                raise Exception(e)
+
+        return weekly_foods
+
+    def parse_opening_times(self, soup):
         pass
 
-    def parse_opening_times(self, soap):
+    def parse_restaurant_info(self, soup):
         pass
 
-    def parse_restaurant_info(self, soap):
-        pass
-
-    def assert_foodlist_exist(self, soap):
-        menu_list = soap.select("#content .pad .menu-list")
-        lunches = soap.select("#content .pad .menu-list .lunch")
+    def assert_foodlist_exist(self, soup):
+        menu_list = soup.select("#content .pad .menu-list")
+        lunches = soup.select("#content .pad .menu-list .lunch")
         menu_isnt_empty = len(menu_list) != 0
         lunches_arent_empty = len(lunches) != 0
         return (menu_isnt_empty and lunches_arent_empty)
