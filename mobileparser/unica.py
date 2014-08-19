@@ -8,29 +8,7 @@ import lxml
 import re
 from bs4 import BeautifulSoup as bs
 from parser_abc import Parser, Restaurant, Day, Food
-
-UNICA_BASE_URL = "http://www.unica.fi/fi/ravintolat/"
-UNICA_ASSARI = {"name": "Assarin ullakko",
-                "url": UNICA_BASE_URL + "assarin-ullakko/"}
-UNICA_BRYGGE = {"name": "Brygge", "url": UNICA_BASE_URL + "brygge/"}
-UNICA_DELICA = {"name": "Delica", "url": UNICA_BASE_URL + "delica/"}
-UNICA_DELIPHARMA = {"name": "Delipharma",
-                    "url": UNICA_BASE_URL + "deli-pharma/"}
-UNICA_DENTAL = {"name": "Dental", "url": UNICA_BASE_URL + "dental/"}
-UNICA_MACCIAVELLI = {"name": "Macciavelli",
-                     "url": UNICA_BASE_URL + "macciavelli/"}
-UNICA_MIKRO = {"name": "Mikro", "url": UNICA_BASE_URL + "mikro/"}
-UNICA_MYSSY = {"name": "Myssy & Silinteri",
-               "url": UNICA_BASE_URL + "myssy-silinteri/"}
-UNICA_NUTRITIO = {"name": "Nutritio", "url": UNICA_BASE_URL + "nutritio/"}
-UNICA_RUOKAKELLO = {"name": "Ruokakello",
-                    "url": UNICA_BASE_URL + "ruokakello/"}
-UNICA_TOTTISALMI = {"name": "Tottisalmi",
-                    "url": UNICA_BASE_URL + "tottisalmi/"}
-UNICA_RESTAURANTS = [UNICA_ASSARI, UNICA_BRYGGE, UNICA_DELICA,
-                     UNICA_DELIPHARMA, UNICA_DENTAL, UNICA_MACCIAVELLI,
-                     UNICA_MIKRO, UNICA_MYSSY, UNICA_NUTRITIO,
-                     UNICA_RUOKAKELLO, UNICA_TOTTISALMI]
+from restaurant_urls import UNICA_RESTAURANTS as unica_urls
 
 
 class Unica(Parser):
@@ -61,7 +39,8 @@ class Unica(Parser):
                 try:
                     alert_element = self.encode_remove_eol(day.table.find(
                         "span", {"class": "alert"}).getText())
-                except Exception, e:
+                except AttributeError, e:
+                    # alert element not found, assign empty string
                     alert_element = ""
 
                 daily_lunches = [self.encode_remove_eol(x.getText())
@@ -85,8 +64,37 @@ class Unica(Parser):
         print "todo"
         pass
 
-    def parse_restaurant_info(self, soup):
-        pass
+    def parse_restaurant_info(self, soup, name, url):
+        restaurant_elements = soup.select(
+            "div#maplist ul.append-bottom li.color")
+        try:
+            for restaurant in restaurant_elements:
+                restaurant_url = self.encode_remove_eol(
+                    restaurant.attrs['data-uri'])
+                if restaurant_url not in url:
+                    pass
+                else:
+                    address = self.encode_remove_eol(
+                        restaurant.attrs['data-address'])
+                    zip_code = self.encode_remove_eol(
+                        restaurant.attrs['data-zip'])
+                    post_office = self.encode_remove_eol(
+                        restaurant.attrs['data-city'])
+                    longitude = self.encode_remove_eol(
+                        restaurant.attrs['data-longitude'])
+                    latitude = self.encode_remove_eol(
+                        restaurant.attrs['data-latitude'])
+                    restaurant_info = {
+                        "name": name,
+                        "address": address,
+                        "zip_code": zip_code,
+                        "post_office": post_office,
+                        "longitude": longitude,
+                        "latitude": latitude
+                    }
+                    return restaurant_info
+        except Exception, e:
+            self.logger.exception(e)
 
     def parse_week_number(self, soup):
         try:
@@ -97,7 +105,7 @@ class Unica(Parser):
         except Exception, e:
             self.logger.exception(e)
 
-    def assert_foodlist_exist(self, soup):
+    def assert_foodlist_exists(self, soup):
         menu_list = soup.select("#content .pad .menu-list")
         lunches = soup.select("#content .pad .menu-list .lunch")
         menu_isnt_empty = len(menu_list) != 0
