@@ -1,7 +1,7 @@
 {
     "name": "Mobileparser",
     "private": "true",
-    "description": "Mobilefood project' parser implementation",
+    "description": "Mobilefood project's parser implementation",
     "dependencies": {
         "grunt-contrib-watch": "0.6.1",
         "grunt-nose": "0.4.0"
