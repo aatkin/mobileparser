@@ -1,4 +1,5 @@
-# mobileparser [![Build Status](https://travis-ci.org/aatkin/mobileparser.png)](https://travis-ci.org/aatkin/mobileparser) #
+<!---# mobileparser [![Build Status](https://travis-ci.org/aatkin/mobileparser.png)](https://travis-ci.org/aatkin/mobileparser) # -->
+# Mobileparser [![Build Status](https://drone.io/github.com/aatkin/mobileparser/status.png)](https://drone.io/github.com/aatkin/mobileparser/latest) #
 
 ## Restaurant HTML-parser for Mobilefood project ##
 
