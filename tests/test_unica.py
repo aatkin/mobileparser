@@ -102,7 +102,7 @@ class TestUnica(unittest.TestCase):
         data_city = "Turku"
         assari_url = unica_urls[0]["url_fi"]
         restaurant_info = self.unica_parser.parse_restaurant_info(
-            self.unica, data_name, assari_url)
+            self.unica, assari_url)
         assert data_name == restaurant_info["name"]
         assert data_address == restaurant_info["address"]
         assert data_zip == restaurant_info['zip_code']
