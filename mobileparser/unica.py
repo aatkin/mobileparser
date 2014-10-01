@@ -23,7 +23,16 @@ class Unica(Parser):
 
     # @abstractmethod
     def parse_page(self, link):
-        pass
+        page = self.load_page(link)
+        soup = bs(page.text, "lxml")
+        week_number = self.parse_week_number(soup)
+        weekly_foods = self.parse_foods(soup)
+        restaurant_info = self.parse_restaurant_info(soup, link)
+        return {
+            "week_number": week_number,
+            "weekly_foods": weekly_foods,
+            "restaurant_info": restaurant_info
+        }
 
     def parse_foods(self, soup):
         weekly_foods = {}
@@ -64,7 +73,7 @@ class Unica(Parser):
         print "todo"
         pass
 
-    def parse_restaurant_info(self, soup, name, url):
+    def parse_restaurant_info(self, soup, url):
         restaurant_elements = soup.select(
             "div#maplist ul.append-bottom li.color")
         try:
@@ -72,8 +81,11 @@ class Unica(Parser):
                 restaurant_url = self.encode_remove_eol(
                     restaurant.attrs['data-uri'])
                 if restaurant_url not in url:
+                    print(restaurant_url + ' : ' + url)
                     pass
                 else:
+                    print('got through')
+                    name = restaurant.strong.getText()
                     address = self.encode_remove_eol(
                         restaurant.attrs['data-address'])
                     zip_code = self.encode_remove_eol(

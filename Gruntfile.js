@@ -25,4 +25,4 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-nose');
 
     grunt.registerTask('default', ['watch']);
-}
+};

@@ -1,6 +1,7 @@
 *.swp
 /output/
 *.pyc
+*.idea/
 build/
 log
 env/
