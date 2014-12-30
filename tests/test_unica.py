@@ -31,6 +31,8 @@ class TestUnica(unittest.TestCase):
                 'tests/resources/macciavelli_en.html')
             self.delica = self.read_and_parse_file(
                 'tests/resources/delica.html')
+            self.brygge_fi_nofoods = self.read_and_parse_file(
+                'tests/resources/brygge_fi_nofoods.html')
         except Exception, error:
             print error
 
@@ -109,3 +111,10 @@ class TestUnica(unittest.TestCase):
         assert data_city == restaurant_info['post_office']
         assert data_longitude == restaurant_info['longitude']
         assert data_latitude == restaurant_info['latitude']
+
+    def test_that_fi_brygge_has_no_foods_and_is_displayed_properly(self):
+        """Test that brygge has no foods and returns empty strings"""
+        parsed = self.unica_parser.parse_page(
+            self.brygge_fi_nofoods, "brygge")[0]
+        assert parsed["weekly_foods"] == ""
+        assert parsed["week_number"] == ""

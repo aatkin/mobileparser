@@ -45,9 +45,10 @@ class Restaurant(object):
     a dict of Day-objects.
     >>> Restaurant(32, "Delipharma", weekly_foods: {"0": Day(...), "1": ...})
     """
-    def __init__(self, restaurant_info, weekly_foods):
+    def __init__(self, restaurant_info, weekly_foods, week_number):
         self.restaurant_info = restaurant_info
         self.weekly_foods = weekly_foods
+        self.week_number = week_number
 
 
 class Day(object):

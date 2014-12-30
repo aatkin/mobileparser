@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '0.2.0'
+__version__ = '0.4.0'
 
 import logging
 import requests
 import lxml
 import re
 from bs4 import BeautifulSoup as bs
+
+from parser_exceptions import *
 from parser_abc import Parser, Restaurant, Day, Food
 from restaurant_urls import UNICA_RESTAURANTS as unica_urls
 
@@ -19,20 +21,39 @@ class Unica(Parser):
 
     # @abstractmethod
     def parse(self):
-        pass
+        parse_results = []
+        for url in unica_urls:
+            page = self.load_page(url["url_fi"])
+            soup = bs(page.text, "lxml")
+            data, error = self.parse_page(soup, url["url_fi"])
+            if error:
+                # if error occurred in parsing, pass the data as it is
+                parse_results.append(data)
+            else:
+                restaurant = Restaurant(data["restaurant_info"],
+                                        data["weekly_foods"],
+                                        data["week_number"])
+                parse_results.append(restaurant)
+        return parse_results
 
     # @abstractmethod
-    def parse_page(self, link):
-        page = self.load_page(link)
-        soup = bs(page.text, "lxml")
-        week_number = self.parse_week_number(soup)
-        weekly_foods = self.parse_foods(soup)
-        restaurant_info = self.parse_restaurant_info(soup, link)
-        return {
-            "week_number": week_number,
-            "weekly_foods": weekly_foods,
-            "restaurant_info": restaurant_info
-        }
+    def parse_page(self, soup, link):
+        if self.assert_foodlist_exists(soup):
+            week_number = self.parse_week_number(soup)
+            weekly_foods = self.parse_foods(soup)
+            restaurant_info = self.parse_restaurant_info(soup, link)
+            return {
+                "restaurant_info": restaurant_info,
+                "weekly_foods": weekly_foods,
+                "week_number": week_number
+            }, False
+        else:
+            restaurant_info = self.parse_restaurant_info(soup, link)
+            return {
+                "restaurant_info": restaurant_info,
+                "weekly_foods": "",
+                "week_number": ""
+            }, True
 
     def parse_foods(self, soup):
         weekly_foods = {}
@@ -57,7 +78,7 @@ class Unica(Parser):
                 daily_diets = [self.encode_remove_eol(x.getText())
                                for x in diet_elements]
                 daily_prices = [re.findall(r"\d\,\d\d", self.encode_remove_eol(
-                    x.getText())) for x in price_elements]
+                                x.getText())) for x in price_elements]
                 daily_foods = [Food(name, diets, prices)
                                for name, diets, prices in zip(daily_lunches,
                                                               daily_diets,
@@ -70,8 +91,52 @@ class Unica(Parser):
         return weekly_foods
 
     def parse_opening_times(self, soup):
-        print "todo"
-        pass
+        # contains opening hours
+        opening_hours_elements = soup.select("#content .pad.mod .threecol")
+        if len.opening_hours_elements == 0:
+            raise NoOpeningHoursException('No opening hours found!')
+
+        weekdays = ['ma', 'ti', 'ke', 'to', 'pe', 'la']
+
+        # has opening hours and lunch times separately
+        if len(opening_hours_elements) > 1:
+            for section in opening_hours_elements:
+                section_title = str(
+                    self.encode_remove_eol(section.h3.get_text()))
+        else:
+            days_hours = self.encode_split_newline(
+                opening_hours_elements[0].p.get_text())
+            days = []
+            hours = []
+            for elem in days_hours:
+                elem_days = elem.split(' ')[0]
+                elem_hours = elem.split(' ')[1]
+                if '-' in elem_days:
+                    start_index = days.index(
+                        elem_days.split('-')[0].lower())
+                    end_index = days.index(
+                        elem_days.split('-')[1].lower()) + 1
+                    days.append(weekdays[start_index:end_index])
+                else:
+                    days.append([elem_days.lower()])
+                elem_hours = self.sanitize_opening_hour(elem_hours)
+                elem_hours = map(parse_hours, elem_hours.split('-'))
+                hours.append([elem_hours[0], elem_hours[1]])
+
+    def parse_hours(hours):
+        if "." not in str(hours):
+            return hours + ".00"
+        else:
+            return hours
+
+    def sanitize_opening_hour(self, data):
+        sanitized = data
+        if ' -' in data:
+            sanitized = sanitized.replace(' -', '-')
+        if '.-' in data:
+            sanitized = sanitized.replace('.-', '.00-')
+        if data[-1] == '.':
+            sanitized[-1] == '.00'
 
     def parse_restaurant_info(self, soup, url):
         restaurant_elements = soup.select(
@@ -81,10 +146,8 @@ class Unica(Parser):
                 restaurant_url = self.encode_remove_eol(
                     restaurant.attrs['data-uri'])
                 if restaurant_url not in url:
-                    print(restaurant_url + ' : ' + url)
                     pass
                 else:
-                    print('got through')
                     name = restaurant.strong.getText()
                     address = self.encode_remove_eol(
                         restaurant.attrs['data-address'])
@@ -106,16 +169,13 @@ class Unica(Parser):
                     }
                     return restaurant_info
         except Exception, e:
-            self.logger.exception(e)
+            raise Exception(e)
 
     def parse_week_number(self, soup):
-        try:
-            head_element = soup.select(
-                "#content .pad .head2")[0].getText().encode("utf-8", "ignore")
-            week_number = int(re.findall(r"\d\d", head_element)[0])
-            return week_number
-        except Exception, e:
-            self.logger.exception(e)
+        head_element = soup.select(
+            "#content .pad .head2")[0].getText().encode("utf-8", "ignore")
+        week_number = int(re.findall(r"\d\d", head_element)[0])
+        return week_number
 
     def assert_foodlist_exists(self, soup):
         menu_list = soup.select("#content .pad .menu-list")
@@ -132,13 +192,22 @@ class Unica(Parser):
             self.logger.exception(e)
             return text
 
+    def encode_split_newline(self, text):
+        try:
+            return text.encode('utf-8', 'ignore').strip().replace(
+                '\t', '').replace('\r', '').split('\n')
+        except UnicodeEncodeError, e:
+            self.logger.exception(e)
+            return text
+
     def load_page(self, link):
         try:
-            self.logger.info(" Loading page " + link)
+            self.logger.info(" Loading page " + link + "...")
             html = requests.get(link)
+            self.logger.info(" Done.")
             return html
-        except Exception, e:
-            raise Exception(e)
+        except RequestException, e:
+            raise RequestException(e)
 
     def __repr__(self):
         return "{0} version {1}".format(self.name, __version__)
