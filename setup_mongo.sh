@@ -3,6 +3,9 @@ if [[ $(id -u) -ne 0 ]] ; then echo "Please run as root" ; exit 1 ; fi
 
 dpkg -s mongodb-org > /dev/null 2>&1
 
+PORT=$1
+if [ -z $PORT ]; then PORT=24730; fi
+
 PKG_EXISTS=$?
 
 if [ $PKG_EXISTS -eq "0" ]; then
@@ -12,14 +15,14 @@ if [ $PKG_EXISTS -eq "0" ]; then
         mkdir -p "$DIR"
     fi
 
-    mongo --port 24730 --eval "db.stats()" > /dev/null 2>&1
+    mongo --port "$PORT" --eval "db.stats()" > /dev/null 2>&1
     MONGO_RUNNING=$?
     if [ ! $MONGO_RUNNING -eq "0" ]; then
-        mongod --config mongodb.conf
+        mongod --config mongodb.conf --port "$PORT"
         SUCCESS=$?
         wait $!
         if [ $SUCCESS -eq "0" ]; then
-            echo "running mongodb at localhost on port 24730"
+            echo "running mongodb at localhost on port $PORT"
         fi
     else
         echo "mongodb instance is already running"
