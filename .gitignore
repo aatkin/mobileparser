@@ -7,3 +7,5 @@ log
 env/
 node_modules/
 mongod/**/*
+Gruntfile.js
+.travis.yml
