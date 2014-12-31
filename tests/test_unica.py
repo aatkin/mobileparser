@@ -1,5 +1,6 @@
 import unittest
 import lxml
+import datetime
 from bs4 import BeautifulSoup as bs
 from mobileparser.unica import Unica
 from mobileparser.restaurant_urls import UNICA_RESTAURANTS as unica_urls
@@ -114,7 +115,8 @@ class TestUnica(unittest.TestCase):
 
     def test_that_fi_brygge_has_no_foods_and_is_displayed_properly(self):
         """Test that brygge has no foods and returns empty strings"""
-        parsed = self.unica_parser.parse_page(
+        restaurant = self.unica_parser.parse_page(
             self.brygge_fi_nofoods, "brygge")[0]
-        assert parsed["weekly_foods"] == ""
-        assert parsed["week_number"] == ""
+        week_number = datetime.date.today().isocalendar()[1]
+        assert restaurant.weekly_foods == ""
+        assert restaurant.week_number == week_number
