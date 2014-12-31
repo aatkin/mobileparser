@@ -15,6 +15,7 @@ class Sodexo(Parser):
 
     # @abstractmethod
     def parse(self):
+        self.logger.warning(' not implemented yet')
         pass
 
     # @abstractmethod
