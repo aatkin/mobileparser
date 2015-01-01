@@ -15,12 +15,11 @@ class Sodexo(Parser):
 
     # @abstractmethod
     def parse(self):
-        self.logger.warning(' not implemented yet')
-        pass
+        raise Exception("not implemented yet")
 
     # @abstractmethod
     def parse_page(self, page):
-        pass
+        raise Exception("not implemented yet")
 
     def __repr__(self):
         return "{0} version {1}".format(self.name, __version__)
