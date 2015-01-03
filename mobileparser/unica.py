@@ -31,11 +31,15 @@ class Unica(Parser):
         parse_results = []
         for url in unica_urls:
             page = self.load_page(url["url_fi"])
+            if page == 1:
+                # page could not be loaded, move on to next url
+                continue
             soup = bs(page.text, "lxml")
             restaurant, error = self.parse_page(soup, url["url_fi"])
             if error:
                 self.logger.debug("Restaurant foods were not found")
             parse_results.append(restaurant)
+
         parse_date = str(datetime.date.today())
         return {
             "restaurants": parse_results,
@@ -114,12 +118,10 @@ class Unica(Parser):
         else:
             opening_times_element = opening_hours_elements[0]
 
-        # days_hours = opening_times_element.p.get_text().replace(', ', '\n')
-        # sanitize the initial string
+        # sanitize and split the initial string
         days_hours = self.parse_opening_data(
             opening_times_element.p.get_text())
         days_hours = self.encode_split_newline(days_hours)
-        days_hours = map((lambda x: " ".join(x.split())), days_hours)
 
         # apply hotfixes to the data here, as needed
         days_hours = map(self.patch_data, days_hours)
@@ -156,8 +158,7 @@ class Unica(Parser):
         if len(sanitized):
             if data[-1] == ',' or data[-1] == ' ':
                 sanitized = sanitized[:-1] + '\n'
-            sanitized = sanitized.replace(' -', '-').replace(
-                ', ', '\n').replace('  ', ' ')
+            sanitized = sanitized.replace(' -', '-').replace(', ', '\n')
         return sanitized
 
     def parse_hours(self, hours):
@@ -266,7 +267,8 @@ class Unica(Parser):
             self.logger.debug(" Done.")
             return html
         except RequestException, e:
-            raise RequestException(e)
+            self.logger.exception(e)
+            return 1
 
     def __repr__(self):
         return "{0} version {1}".format(self.name, __version__)
