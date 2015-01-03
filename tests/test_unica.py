@@ -1,9 +1,11 @@
 import unittest
 import lxml
 import datetime
+
 from bs4 import BeautifulSoup as bs
 from mobileparser.unica import Unica
 from mobileparser.restaurant_urls import UNICA_RESTAURANTS as unica_urls
+from mobileparser.db_manager import DB_manager
 
 
 class TestUnica(unittest.TestCase):
@@ -19,6 +21,7 @@ class TestUnica(unittest.TestCase):
 
     def setUp(self):
         self.unica_parser = Unica()
+        self.dbm = DB_manager()
         try:
             self.unica = self.read_and_parse_file(
                 'tests/resources/unica.html')
@@ -72,18 +75,18 @@ class TestUnica(unittest.TestCase):
         weekly_foods = self.unica_parser.parse_foods(
             self.delica)
         alert_string = "Deli palvelee viikolla 34 ma-to tervetuloa!"
-        test_string = weekly_foods[0].alert
+        test_string = weekly_foods["0"].alert
         self.assertEqual(alert_string, test_string)
 
     def test_that_en_macciavelli_has_no_alerts(self):
         """Test that macciavelli_en has no alerts"""
         weekly_foods = self.unica_parser.parse_foods(
             self.macciavelli_en)
-        self.assertEqual(weekly_foods[0].alert, "")
-        self.assertEqual(weekly_foods[1].alert, "")
-        self.assertEqual(weekly_foods[2].alert, "")
-        self.assertEqual(weekly_foods[3].alert, "")
-        self.assertEqual(weekly_foods[4].alert, "")
+        self.assertEqual(weekly_foods["0"].alert, "")
+        self.assertEqual(weekly_foods["1"].alert, "")
+        self.assertEqual(weekly_foods["2"].alert, "")
+        self.assertEqual(weekly_foods["3"].alert, "")
+        self.assertEqual(weekly_foods["4"].alert, "")
 
     def test_that_assari_is_on_week_33(self):
         """Test that assari_fi's lunch menu is from week 33"""
@@ -94,6 +97,14 @@ class TestUnica(unittest.TestCase):
         """Test that delica_en's lunch menu is from week 34"""
         week_number = self.unica_parser.parse_week_number(self.delica)
         assert week_number == 34
+
+    def test_that_assaris_opening_times_are_parsed_correctly(self):
+        opening_hours = self.unica_parser.parse_opening_times(
+            self.assari)
+        monday_hours = ("10.30", "16.00")
+        friday_hours = ("10.30", "16.00")
+        assert opening_hours['ma'] == monday_hours
+        assert opening_hours['pe'] == friday_hours
 
     def test_that_assaris_info_is_parsed_correctly(self):
         """Test that assari_fi's restaurant info is parsed correctly"""
@@ -120,3 +131,16 @@ class TestUnica(unittest.TestCase):
         week_number = datetime.date.today().isocalendar()[1]
         assert restaurant.weekly_foods == ""
         assert restaurant.week_number == week_number
+
+    # def test_that_delica_is_serialized_properly(self):
+    #     """Test that delica_en's lunch menu is serialized properly"""
+    #     restaurant = self.unica_parser.parse_page(
+    #         self.delica, "delica")[0]
+    #     data = {
+    #         "restaurants": [restaurant],
+    #         "parser_version": "0.4",
+    #         "parser_name": "Unica",
+    #         "parse_date": "01012015"
+    #     }
+    #     a = self.dbm.(data)
+    #     assert a['week_number'] == 34

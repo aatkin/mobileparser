@@ -21,7 +21,7 @@ def main(argv):
 
     parsers = {}
     parsers["unica"] = Unica()
-    parsers["sodexo"] = Sodexo()
+    # parsers["sodexo"] = Sodexo()
 
     try:
         dbm.init_db()
@@ -33,12 +33,13 @@ def main(argv):
         arg = sys.argv[1].lower()
         if arg in parsers:
             data = parsers[arg].parse()
-            dbm.handle_data(data)
+            # dbm.handle_data(data)
         else:
             logger.warning(" No parsers exist for key " + arg)
     else:
-        for key, value in parsers.iteritems():
-            logger.info(value)
+        for key, parser in parsers.iteritems():
+            data = parser.parse()
+            # dbm.handle_data(data)
 
     try:
         dbm.close_db()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 
 import logging
 import requests
@@ -12,6 +12,12 @@ from bs4 import BeautifulSoup as bs
 from parser_exceptions import *
 from parser_abc import Parser, Restaurant, Day, Food
 from restaurant_urls import UNICA_RESTAURANTS as unica_urls
+
+__foodmenu_list__ = "#content .pad .menu-list"
+__foodlists__ = "#content .pad .menu-list .accord"
+__opening_times__ = "#content .pad.mod .threecol"
+__restaurant_infos__ = "div#maplist ul.append-bottom li.color"
+__week_number__ = "#content .pad .head2"
 
 
 class Unica(Parser):
@@ -58,7 +64,7 @@ class Unica(Parser):
 
     def parse_foods(self, soup):
         weekly_foods = {}
-        week_days = soup.select("#content .menu-list .accord")
+        week_days = soup.select(__foodlists__)
         for index, day in enumerate(week_days):
             try:
                 day_name = self.encode_remove_eol(day.h4.getText())
@@ -71,7 +77,7 @@ class Unica(Parser):
                     alert_element = self.encode_remove_eol(day.table.find(
                         "span", {"class": "alert"}).getText())
                 except AttributeError, e:
-                    # alert element not found, assign empty string
+                    # alert element not found
                     alert_element = ""
 
                 daily_lunches = [self.encode_remove_eol(x.getText())
@@ -84,7 +90,7 @@ class Unica(Parser):
                                for name, diets, prices in zip(daily_lunches,
                                                               daily_diets,
                                                               daily_prices)]
-                weekly_foods[day_number] = Day(
+                weekly_foods[str(day_number)] = Day(
                     day_name, day_number, daily_foods, alert_element)
             except Exception, e:
                 self.logger.exception(e)
@@ -93,11 +99,11 @@ class Unica(Parser):
 
     def parse_opening_times(self, soup):
         # contains opening hours
-        opening_hours_elements = soup.select("#content .pad.mod .threecol")
-        if len.opening_hours_elements == 0:
-            raise Exception('No opening hours found!')
+        opening_hours_elements = soup.select(__opening_times__)
+        if len(opening_hours_elements) == 0:
+            return {}
 
-        weekdays = ['ma', 'ti', 'ke', 'to', 'pe', 'la']
+        weekdays = ['ma', 'ti', 'ke', 'to', 'pe', 'la', 'su']
 
         if len(opening_hours_elements) > 1:
             for section in opening_hours_elements:
@@ -108,43 +114,88 @@ class Unica(Parser):
         else:
             opening_times_element = opening_hours_elements[0]
 
-        days_hours = self.encode_split_newline(
+        # days_hours = opening_times_element.p.get_text().replace(', ', '\n')
+        # sanitize the initial string
+        days_hours = self.parse_opening_data(
             opening_times_element.p.get_text())
-        days = []
-        hours = []
+        days_hours = self.encode_split_newline(days_hours)
+        days_hours = map((lambda x: " ".join(x.split())), days_hours)
+
+        # apply hotfixes to the data here, as needed
+        days_hours = map(self.patch_data, days_hours)
+
+        self.logger.debug(days_hours)
+
+        opening_dates = {}
         for elem in days_hours:
             elem_days = elem.split(' ')[0]
             elem_hours = elem.split(' ')[1]
-            if '-' in elem_days:
-                start_index = days.index(
-                    elem_days.split('-')[0].lower())
-                end_index = days.index(
-                    elem_days.split('-')[1].lower()) + 1
-                days.append(weekdays[start_index:end_index])
-            else:
-                days.append([elem_days.lower()])
-            elem_hours = self.sanitize_opening_hour(elem_hours)
-            elem_hours = map(parse_hours, elem_hours.split('-'))
-            hours.append([elem_hours[0], elem_hours[1]])
+            if len(elem_days) and len(elem_hours):
+                days = []
+                if '-' in elem_days:
+                    start_index = weekdays.index(
+                        elem_days.split('-')[0].lower())
+                    end_index = weekdays.index(
+                        elem_days.split('-')[1].lower()) + 1
+                    days.append(weekdays[start_index:end_index])
+                else:
+                    if '-' in elem_hours:
+                        days.append([elem_days.lower()])
+                    else:
+                        break
+                elem_hours = self.sanitize_opening_hour(elem_hours)
+                elem_hours = map(self.parse_hours, elem_hours.split('-'))
+                for day in days[0]:
+                    if len(day) == 2:
+                        opening_dates[day] = (elem_hours[0], elem_hours[1])
+        self.logger.debug(opening_dates)
+        return opening_dates
 
-    def parse_hours(hours):
-        if "." not in str(hours):
-            return hours + ".00"
-        else:
-            return hours
+    def parse_opening_data(self, data):
+        sanitized = data
+        if len(sanitized):
+            if data[-1] == ',' or data[-1] == ' ':
+                sanitized = sanitized[:-1] + '\n'
+            sanitized = sanitized.replace(' -', '-').replace(
+                ', ', '\n').replace('  ', ' ')
+        return sanitized
+
+    def parse_hours(self, hours):
+        parsed = hours
+        if len(parsed):
+            if "." not in str(hours):
+                parsed = hours + ".00"
+        return parsed
 
     def sanitize_opening_hour(self, data):
         sanitized = data
-        if ' -' in data:
-            sanitized = sanitized.replace(' -', '-')
-        if '.-' in data:
-            sanitized = sanitized.replace('.-', '.00-')
-        if data[-1] == '.':
-            sanitized[-1] == '.00'
+        if len(sanitized):
+            if ' -' in sanitized:
+                sanitized = sanitized.replace(' -', '-')
+            if '.-' in sanitized:
+                sanitized = sanitized.replace('.-', '.00-')
+            if sanitized[-1] == '.' and sanitized[-1] != '00.':
+                sanitized = sanitized[:-1]
+            if ',' in sanitized:
+                sanitized = sanitized.replace(',', '')
+        return sanitized
+
+    def patch_data(self, data):
+        sanitized = data
+
+        if len(sanitized):
+            # Macciavelli fix
+            if 'Lunch' in sanitized:
+                sanitized = sanitized.replace('Lunch', '').strip()
+            # NBSP fix
+            sanitized = sanitized.replace(
+                '\xc2\xa0', '')
+            # remove all extra space
+            sanitized = " ".join(sanitized.split())
+        return sanitized
 
     def parse_restaurant_info(self, soup, url):
-        restaurant_elements = soup.select(
-            "div#maplist ul.append-bottom li.color")
+        restaurant_elements = soup.select(__restaurant_infos__)
         try:
             for restaurant in restaurant_elements:
                 restaurant_url = self.encode_remove_eol(
@@ -163,28 +214,31 @@ class Unica(Parser):
                         restaurant.attrs['data-longitude'])
                     latitude = self.encode_remove_eol(
                         restaurant.attrs['data-latitude'])
+                    opening_times = self.parse_opening_times(
+                        soup)
                     restaurant_info = {
                         "name": name,
                         "address": address,
                         "zip_code": zip_code,
                         "post_office": post_office,
                         "longitude": longitude,
-                        "latitude": latitude
+                        "latitude": latitude,
+                        "opening_times": opening_times
                     }
                     return restaurant_info
         except Exception, e:
-            raise Exception(e)
+            self.logger.exception(e)
 
     def parse_week_number(self, soup):
         head_element = soup.select(
-            "#content .pad .head2")[0].getText().encode("utf-8", "ignore")
+            __week_number__)[0].getText().encode("utf-8", "ignore")
         week_number = int(re.findall(r"\d\d", head_element)[0])
         self.logger.debug("week number: " + str(week_number))
         return week_number
 
     def assert_foodlist_exists(self, soup):
-        menu_list = soup.select("#content .pad .menu-list")
-        lunches = soup.select("#content .pad .menu-list .lunch")
+        menu_list = soup.select(__foodmenu_list__)
+        lunches = soup.select(__foodmenu_list__ + " .lunch")
         menu_isnt_empty = len(menu_list) != 0
         lunches_arent_empty = len(lunches) != 0
         return (menu_isnt_empty and lunches_arent_empty)
