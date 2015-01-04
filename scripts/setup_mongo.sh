@@ -18,7 +18,8 @@ if [ $PKG_EXISTS -eq "0" ]; then
     mongo --port "$PORT" --eval "db.stats()" > /dev/null 2>&1
     MONGO_RUNNING=$?
     if [ ! $MONGO_RUNNING -eq "0" ]; then
-        mongod --config mongodb.conf --port "$PORT"
+        CONF=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )../mongodb.conf
+        mongod --config "$CONF" --port "$PORT"
         SUCCESS=$?
         wait $!
         if [ $SUCCESS -eq "0" ]; then
