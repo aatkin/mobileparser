@@ -125,5 +125,5 @@ class TestUnica(unittest.TestCase):
         restaurant = self.unica_parser.parse_page(
             self.brygge_fi_nofoods, "brygge")[0]
         week_number = datetime.date.today().isocalendar()[1]
-        assert restaurant.weekly_foods == ""
+        assert restaurant.weekly_foods == []
         assert restaurant.foodlist_date['week_number'] == week_number
