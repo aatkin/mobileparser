@@ -106,7 +106,6 @@ class TestUnica(unittest.TestCase):
 
     def test_that_assaris_info_is_parsed_correctly(self):
         """Test that assari_fi's restaurant info is parsed correctly"""
-        data_name = "Assarin ullakko"
         data_latitude = "60.454578973794234"
         data_longitude = "22.287014635968035"
         data_address = "Rehtorinpellonkatu 4 A"
@@ -115,7 +114,6 @@ class TestUnica(unittest.TestCase):
         assari_url = unica_urls[0]["url_fi"]
         restaurant_info = self.unica_parser.parse_restaurant_info(
             self.unica, assari_url)
-        assert data_name == restaurant_info["name"]
         assert data_address == restaurant_info["address"]
         assert data_zip == restaurant_info['zip_code']
         assert data_city == restaurant_info['post_office']
@@ -128,4 +126,4 @@ class TestUnica(unittest.TestCase):
             self.brygge_fi_nofoods, "brygge")[0]
         week_number = datetime.date.today().isocalendar()[1]
         assert restaurant.weekly_foods == ""
-        assert restaurant.week_number == week_number
+        assert restaurant.foodlist_date['week_number'] == week_number
