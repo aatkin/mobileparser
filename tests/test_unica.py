@@ -5,7 +5,6 @@ import datetime
 from bs4 import BeautifulSoup as bs
 from mobileparser.unica import Unica
 from mobileparser.restaurant_urls import UNICA_RESTAURANTS as unica_urls
-from mobileparser.db_manager import DB_manager
 
 
 class TestUnica(unittest.TestCase):
@@ -21,7 +20,6 @@ class TestUnica(unittest.TestCase):
 
     def setUp(self):
         self.unica_parser = Unica()
-        self.dbm = DB_manager()
         try:
             self.unica = self.read_and_parse_file(
                 'tests/resources/unica.html')
@@ -131,16 +129,3 @@ class TestUnica(unittest.TestCase):
         week_number = datetime.date.today().isocalendar()[1]
         assert restaurant.weekly_foods == ""
         assert restaurant.week_number == week_number
-
-    # def test_that_delica_is_serialized_properly(self):
-    #     """Test that delica_en's lunch menu is serialized properly"""
-    #     restaurant = self.unica_parser.parse_page(
-    #         self.delica, "delica")[0]
-    #     data = {
-    #         "restaurants": [restaurant],
-    #         "parser_version": "0.4",
-    #         "parser_name": "Unica",
-    #         "parse_date": "01012015"
-    #     }
-    #     a = self.dbm.(data)
-    #     assert a['week_number'] == 34

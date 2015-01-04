@@ -37,10 +37,13 @@ class Restaurant(object):
     Represents weekly foods of a given restaurant. weekly_foods consists of
     a dict of Day-objects.
     """
-    def __init__(self, restaurant_info, weekly_foods, week_number):
+    def __init__(self, restaurant_info, weekly_foods, week_number, year):
         self.restaurant_info = restaurant_info
+        self.foodlist_date = {
+            "week_number": week_number,
+            "year": year
+        }
         self.weekly_foods = weekly_foods
-        self.week_number = week_number
 
 
 class Day(object):

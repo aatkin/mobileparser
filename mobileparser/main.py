@@ -12,7 +12,7 @@ from db_manager import DB_manager
 
 
 def main(argv):
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(" {0}".format(__name__))
 
     logger.info(" Mobileparser version " + __version__)
@@ -31,18 +31,30 @@ def main(argv):
 
     if len(sys.argv) > 1:
         arg = sys.argv[1].lower()
-        if arg in parsers:
-            data = parsers[arg].parse()
-            # dbm.handle_data(data)
-        else:
-            logger.warning(" No parsers exist for key " + arg)
+        try:
+            if arg in parsers:
+                data = parsers[arg].parse()
+                dbm.handle_data(data)
+            else:
+                logger.warning(" No parsers exist for key " + arg)
+        except Exception, e:
+            logger.exception(e)
+            dbm.close_db()
+            sys.exit(1)
     else:
-        for key, parser in parsers.iteritems():
-            data = parser.parse()
-            # dbm.handle_data(data)
+        try:
+            for key, parser in parsers.iteritems():
+                data = parser.parse()
+                dbm.handle_data(data)
+        except Exception, e:
+            logger.exception(e)
+            dbm.close_db()
+            sys.exit(1)
 
     try:
+        dbm.update_parser_version(__version__)
         dbm.close_db()
+        logger.info(" Parse complete")
     except Exception, e:
         logger.exception(e)
         sys.exit(1)

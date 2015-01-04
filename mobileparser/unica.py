@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '0.5.0'
+__version__ = '0.5.2'
 
 import logging
 import requests
@@ -36,6 +36,8 @@ class Unica(Parser):
                 continue
             soup = bs(page.text, "lxml")
             restaurant, error = self.parse_page(soup, url["url_fi"])
+            restaurant.restaurant_info["name"] = url["name"]
+            restaurant.restaurant_info["id"] = url["id"]
             if error:
                 self.logger.debug("Restaurant foods were not found")
             parse_results.append(restaurant)
@@ -50,20 +52,23 @@ class Unica(Parser):
 
     # @abstractmethod
     def parse_page(self, soup, link):
+        parse_year = datetime.date.today().year
         if self.assert_foodlist_exists(soup):
             week_number = self.parse_week_number(soup)
             weekly_foods = self.parse_foods(soup)
             restaurant_info = self.parse_restaurant_info(soup, link)
             restaurant = Restaurant(restaurant_info,
                                     weekly_foods,
-                                    week_number)
+                                    week_number,
+                                    parse_year)
             return restaurant, False
         else:
             week_number = datetime.date.today().isocalendar()[1]
             restaurant_info = self.parse_restaurant_info(soup, link)
             restaurant = Restaurant(restaurant_info,
                                     "",
-                                    week_number)
+                                    week_number,
+                                    parse_year)
             return restaurant, True
 
     def parse_foods(self, soup):
@@ -204,7 +209,6 @@ class Unica(Parser):
                 if restaurant_url not in url:
                     pass
                 else:
-                    name = restaurant.strong.getText()
                     address = self.encode_remove_eol(
                         restaurant.attrs['data-address'])
                     zip_code = self.encode_remove_eol(
@@ -218,7 +222,6 @@ class Unica(Parser):
                     opening_times = self.parse_opening_times(
                         soup)
                     restaurant_info = {
-                        "name": name,
                         "address": address,
                         "zip_code": zip_code,
                         "post_office": post_office,

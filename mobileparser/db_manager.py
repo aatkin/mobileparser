@@ -20,13 +20,30 @@ class DB_manager(object):
 
     def handle_data(self, data):
         self.logger.debug(data)
+        parser_info = {
+            "parser_version": data["parser_version"],
+            "parser_name": data["parser_name"].lower(),
+            "parse_date": data["parse_date"]
+        }
         for restaurant in data['restaurants']:
             serialized = self.todict(restaurant)
+            serialized["parser_info"] = parser_info
             self.logger.debug(serialized)
-            self.update_restaurant(serialized, data)
+            self.update_restaurant(serialized)
 
-    def update_restaurant(self, restaurant, data):
-        self.db.restaurant.insert(restaurant)
+    def update_restaurant(self, restaurant):
+        name = restaurant["restaurant_info"]["name"]
+        week = restaurant["foodlist_date"]["week_number"]
+        year = restaurant["foodlist_date"]["year"]
+        searched = {
+            "restaurant_info.name": name,
+            "foodlist_date.week_number": week,
+            "foodlist_date.year": year
+        }
+        self.db.restaurant.update(searched, restaurant, upsert=True)
+
+    def update_parser_version(self, version):
+        self.db.info.save({"version": version})
 
     def todict(self, obj, classkey=None):
         if isinstance(obj, dict):
