@@ -32,18 +32,43 @@ class DB_manager(object):
             self.update_restaurant(serialized)
 
     def update_restaurant(self, restaurant):
-        name = restaurant["restaurant_info"]["name"]
+        r_id = restaurant["restaurant_info"]["id"]
+        chain = restaurant["restaurant_info"]["chain"]
         week = restaurant["foodlist_date"]["week_number"]
         year = restaurant["foodlist_date"]["year"]
-        searched = {
-            "restaurant_info.name": name,
-            "foodlist_date.week_number": week,
-            "foodlist_date.year": year
+
+        # restaurant foodlist
+        searched_foodlist = {
+            "foodlist_info.id": r_id,
+            "foodlist_chain": chain,
+            "foodlist_info.week_number": week,
+            "foodlist_info.year": year
         }
-        self.db.restaurant.update(searched, restaurant, upsert=True)
+        foodlist = {
+            "foodlist_info": {
+                "id": r_id,
+                "chain": chain,
+                "week_number": week,
+                "year": year
+            },
+            "weekly_foods": restaurant["weekly_foods"],
+            "debug": restaurant["parser_info"]
+        }
+
+        # restaurant info
+        searched_info = {
+            "restaurant_info.id": r_id
+        }
+        info = {
+            "restaurant_info": restaurant["restaurant_info"],
+            "debug": restaurant["parser_info"]
+        }
+
+        self.db.foods.update(searched_foodlist, foodlist, upsert=True)
+        self.db.info.update(searched_info, info, upsert=True)
 
     def update_parser_version(self, version):
-        self.db.info.save({"version": version})
+        self.db.parser.save({"version": version})
 
     def todict(self, obj, classkey=None):
         if isinstance(obj, dict):

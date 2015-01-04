@@ -38,6 +38,7 @@ class Unica(Parser):
             restaurant, error = self.parse_page(soup, url["url_fi"])
             restaurant.restaurant_info["name"] = url["name"]
             restaurant.restaurant_info["id"] = url["id"]
+            restaurant.restaurant_info["chain"] = "unica"
             if error:
                 self.logger.debug("Restaurant foods were not found")
             parse_results.append(restaurant)
@@ -66,7 +67,7 @@ class Unica(Parser):
             week_number = datetime.date.today().isocalendar()[1]
             restaurant_info = self.parse_restaurant_info(soup, link)
             restaurant = Restaurant(restaurant_info,
-                                    "",
+                                    [],
                                     week_number,
                                     parse_year)
             return restaurant, True
